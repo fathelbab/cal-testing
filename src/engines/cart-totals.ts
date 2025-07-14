@@ -1,17 +1,19 @@
-import { PricedCartItem } from './items';
-import { PricedOfferItem } from './offers';
 
-export interface CartTotals {
-  totalNet: number;
+export interface CartTotalsResults {
+  totalNetPrice: number;
+  totalPriceWithVat: number;
+}
+export interface Isumcart {
+  netPrice: number;
   totalPrice: number;
 }
 
-export function sumCart(items: (PricedCartItem | PricedOfferItem)[]): CartTotals {
+export function sumCart(items:Isumcart[]): CartTotalsResults {
   return items.reduce(
     (sum, i) => ({
-      totalNet: sum.totalNet + i.netPrice * i.quantity,
-      totalPrice: sum.totalPrice + i.cartPrice * i.quantity,
+      totalPriceWithVat: sum.totalPriceWithVat + i.totalPrice ,
+      totalNetPrice: sum.totalNetPrice + i.netPrice ,
     }),
-    { totalNet: 0, totalPrice: 0 }
+    { totalPriceWithVat: 0, totalNetPrice: 0 }
   );
 } 
