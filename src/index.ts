@@ -1,85 +1,88 @@
-import { calcItemPrices, PricedCartItem } from './engines/items';
-import { calcOfferPrices, PricedOfferItem } from './engines/offers';
 import { sumCart } from './engines/cart-totals';
-import { calcDeliveryFees } from './engines/delivery';
 import { calcDineinCharge } from './engines/dinein';
-import { applyPromocode } from './engines/promocode';
-import { applyLoyalty } from './engines/loyalty';
 import { CheckoutConfig } from './models/CheckoutConfig';
+import { calcItemPrices, collectPricedCartItems, PricedCartItem } from './engines/items';
+import {  applyDiscountsInOrder } from './engines/discount';
+import {  calculateVatDetails } from './engines/vat';
+import { calculateFinalTotal } from './engines/final-total';
+import { validateCheckoutConfig } from './validation/validation';
 
 export interface CheckoutResult {
-  items: PricedCartItem[];
-  offers: PricedOfferItem[];
-  totals: {
-    subTotalNet: number;
-    subTotalPrice: number;
-    deliveryFee: number;
-    deliveryFeeWithVat: number;
-    deliveryTime: number;
-    vat: number;
-    dineinCharge: number;
-    afterPromocode: number;
-    loyaltyCredit: number;
-    finalTotal: number;
-    pointsUsed: number;
-  };
+  subTotal: number;
+  subTotalWithVat: number;
+  Totalvat: number;
+  promocodeDiscountAmount: number;
+  loyaltyDiscountAmount: number;
+  finalTotal: number;
+  vatSubTotal: number;
 }
 
+
+
 export function checkout(config: CheckoutConfig): CheckoutResult {
-  const pricedItems = config.menuItems.map(calcItemPrices);
-  const pricedOffers = config.offers.map(calcOfferPrices);
+  validateCheckoutConfig(config);
+  const {
+    menuItems,
+    offers,
+    deliveryFeesEgp = 0,
+    loyaltyDiscount = 0,
+    promoCodeDiscount = 0,
+    dineinPercentage = 0,
+    dineinFixed = 0,
+  } = config;
 
-  const { totalNet, totalPrice } = sumCart([...pricedItems, ...pricedOffers]);
+  const pricedItems = menuItems ? calcItemPrices(menuItems) : undefined;
+  const pricedOffers = offers ? calcItemPrices(offers) : undefined;
+  const pricedCartItems = collectPricedCartItems(pricedItems, pricedOffers);
 
-  const { fee, feeWithVat, time } = calcDeliveryFees({
-    branchConfig: config.branchConfig,
-    addressConfig: config.addressConfig,
-    deliveryType: config.deliveryType,
+  const { totalNetPrice, totalPriceWithVat } = sumCart(pricedCartItems);
+
+  const dineinCharge = dineinFixed || dineinPercentage
+    ? calcDineinCharge(totalNetPrice, { fixed: dineinFixed, percentage: dineinPercentage })
+    : 0;
+  const vatSubTotal = totalPriceWithVat - totalNetPrice;
+
+  const { appliedPromo, appliedLoyalty } = applyDiscountsInOrder(totalNetPrice, promoCodeDiscount, loyaltyDiscount);
+
+  const {
+    totalVat
+  } = calculateVatDetails(
+    totalNetPrice,
+    totalPriceWithVat,
+    dineinCharge,
+    deliveryFeesEgp,
+    appliedPromo,
+    appliedLoyalty
+  );
+
+  const finalTotal   = calculateFinalTotal({
+    totalPriceWithVat,
+    dineinCharge,
+    deliveryFeesEgp,
+    loyaltyDiscount: loyaltyDiscount ?? 0,
+    promocodeDiscount: promoCodeDiscount ?? 0
   });
 
-  const vatBase = parseFloat(((totalPrice - totalNet + (feeWithVat - fee)) || 0).toFixed(2));
-  const dineinCharge = calcDineinCharge(totalNet, {
-    fixed: config.dineinFixed,
-    percentage: config.dineinPercentage,
-  });
-  const dineinVat = parseFloat((((totalNet + dineinCharge) * 0.14) - (totalNet * 0.14)).toFixed(2));
-
-  let amount = totalPrice + feeWithVat + dineinCharge + dineinVat;
-  amount = applyPromocode(amount, {
-    fixed: config.promocodeFixed,
-    percentage: config.promocodePercentage,
-  });
-
-  const { pointsUsed, creditValue } = applyLoyalty(amount, config.userPointsInfo || {});
-  const finalTotal = parseFloat((amount - creditValue).toFixed(2));
-
+ 
   return {
-    items: pricedItems,
-    offers: pricedOffers,
-    totals: {
-      subTotalNet: totalNet,
-      subTotalPrice: totalPrice,
-      deliveryFee: fee,
-      deliveryFeeWithVat: feeWithVat,
-      deliveryTime: time,
-      vat: vatBase + dineinVat,
-      dineinCharge,
-      afterPromocode: amount,
-      loyaltyCredit: creditValue,
-      finalTotal,
-      pointsUsed,
-    }
+    subTotal: Number(totalNetPrice.toFixed(2)),
+    subTotalWithVat: Number(totalPriceWithVat.toFixed(2)),
+    loyaltyDiscountAmount: Number(appliedLoyalty.toFixed(2)),
+    promocodeDiscountAmount: Number(appliedPromo.toFixed(2)),
+    vatSubTotal: Number(vatSubTotal.toFixed(2)),
+    Totalvat: Number(totalVat.toFixed(2)),
+    finalTotal: Number(finalTotal.toFixed(2)),
   };
 }
 
 // Re-export all types and functions for convenience
 export * from './models/CartItem';
-export * from './models/OfferItem';
 export * from './models/CheckoutConfig';
 export * from './engines/items';
-export * from './engines/offers';
 export * from './engines/cart-totals';
-export * from './engines/delivery';
 export * from './engines/dinein';
+export * from './engines/discount';
+export * from './engines/final-total';
+export * from './engines/vat';
 export * from './engines/promocode';
-export * from './engines/loyalty'; 
+export * from './validation/validation'
