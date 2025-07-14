@@ -1,235 +1,175 @@
 # Buffalo Burger Calculations
 
-A TypeScript cart calculation engine for buffalo burger restaurants. This package provides a comprehensive solution for calculating order totals, including items, offers, delivery fees, dine-in charges, promocodes, and loyalty points.
+A TypeScript-based calculation engine for Buffalo Burger orders. This package handles detailed pricing logic including items, offers, delivery fees, dine-in charges, promo codes, loyalty discounts, and VAT.
 
 ## Features
 
-- 🍔 **Item Pricing**: Calculate prices for menu items with extras, replacements, and combo options
-- 🎁 **Offer Management**: Handle complex offers with sandwiches, fries, and drinks
-- 🚚 **Delivery Calculation**: Support for delivery fees with VAT calculations
-- 🍽️ **Dine-in Charges**: Fixed or percentage-based dine-in charges
-- 🎫 **Promocode Support**: Fixed amount or percentage discounts
-- ⭐ **Loyalty Points**: Points-based discount system
-- 📦 **TypeScript**: Full TypeScript support with comprehensive type definitions
-- 🧪 **Tested**: Jest test suite included
+- 🍔 **Item & Offer Pricing**: Handles combos, extras, and replacements
+- 🚚 **Delivery & Dine-in**: Calculates extra charges with VAT support
+- 🎫 **Promo Code Logic**: Fixed or percentage discounts, applied first
+- ⭐ **Loyalty Discount**: Capped to net total after promo
+- 🧾 **VAT Accuracy**: Always calculated on post-discount net total
+- ✅ **Well-tested**: Comes with a comprehensive Jest test suite
+
+---
+
+## Discount & VAT Calculation Logic
+
+| Step | Rule |
+|------|------|
+| 1    | **Promo code discount** is applied first, up to the full net cart value |
+| 2    | **Loyalty discount** is applied to the remaining net value after promo code |
+| 3    | **Net price after all discounts will never go below zero** |
+| 4    | **VAT is calculated only on the non-negative net price after discounts** |
+| 5    | If discounts fully cover the cart, **VAT is zero (never negative)** |
+
+### Example
+```ts
+const config: CheckoutConfig = {
+  menuItems: [
+    { quantity: 1, required_netPrice: 40, required_totalPrice: 45.6 },
+  ],
+  offers: [],
+  promoCodeDiscount: 25, // applied first
+  loyaltyDiscount: 25,   // applied to the remainder (only 15 will be used)
+};
+const result = checkout(config);
+console.log(result);
+// {
+//   subTotal: 40,
+//   subTotalWithVat: 45.6,
+//   promocodeDiscountAmount: 25,
+//   loyaltyDiscountAmount: 15,
+//   vatSubTotal: 5.6,
+//   Totalvat: 0,
+//   finalTotal: 0
+// }
+```
+
+---
 
 ## Installation
-
 ```bash
 npm install buffalo-burger-calculations
 ```
 
-## Usage
+---
 
-### Basic Checkout
+## How to Use
 
-```typescript
+### 🔁 Basic Checkout
+```ts
 import { checkout, CheckoutConfig } from 'buffalo-burger-calculations';
 
 const config: CheckoutConfig = {
   menuItems: [
-    {
-      id: 1,
-      quantity: 2,
-      size: {
-        fullData: {
-          net_price: 10.00,
-          total_price: 11.40
-        }
-      },
-      extras: [
-        {
-          id: 101,
-          net_price: 2.00,
-          total_price: 2.28,
-          fullData: {
-            net_price: 2.00,
-            total_price: 2.28
-          }
-        }
-      ]
-    }
+     {
+       cart_id: 'item1',
+       quantity: 2,
+       required_netPrice: 50,
+       required_totalPrice: 57,
+     },
   ],
-  offers: [],
-  deliveryType: 1, // 1 = delivery, 2 = pickup, 3 = dine-in
-  branchConfig: {
-    branch_delivery_charge: 5.00,
-    delivery_time: 30
-  },
-  addressConfig: {
-    street: {
-      delivery_charge: 5.00,
-      delivery_time: 30
-    }
-  }
+  offers: [
+     {
+       cart_id: 'offer1',
+       quantity: 1,
+       required_netPrice: 30,
+       required_totalPrice: 34.2,
+     },
+  ],
+  deliveryFeesEgp: 10,
+  promoCodeDiscount: 5,
+  loyaltyDiscount: 3,
 };
 
 const result = checkout(config);
-console.log(result.totals.finalTotal); // Final total amount
+console.log(result.finalTotal);
 ```
 
-### Advanced Features
-
-```typescript
-import { checkout, CheckoutConfig } from 'buffalo-burger-calculations';
-
+### 🔧 Advanced Configuration
+```ts
 const config: CheckoutConfig = {
-  menuItems: [/* ... */],
-  offers: [/* ... */],
-  deliveryType: 1,
-  branchConfig: {/* ... */},
-  addressConfig: {/* ... */},
-  
-  // Promocode (10% discount)
-  promocodePercentage: 10,
-  
-  // Dine-in charge (5% of net total)
+  menuItems: [/* items */],
+  offers: [/* offers */],
   dineinPercentage: 5,
-  
-  // Loyalty points
-  userPointsInfo: {
-    points: 100,
-    pendingPoints: 0,
-    pointsValue: 50.00,
-    pendingPointsValue: 0
-  }
+  dineinFixed: 0,
+  promoCodeDiscount: 30,
+  loyaltyDiscount: 50,
+  deliveryFeesEgp: 15,
 };
 
 const result = checkout(config);
+ result interface is 
+ // {
+//   subTotal: 40,
+//   subTotalWithVat: 45.6,
+//   promocodeDiscountAmount: 25,
+//   loyaltyDiscountAmount: 15,
+//   vatSubTotal: 5.6,
+//   Totalvat: 0,
+//   finalTotal: 0
+// }
 ```
 
-### Order API Integration
-
-```typescript
-import { buildOrderPayload } from 'buffalo-burger-calculations/mappers/order-api';
-
-const orderPayload = buildOrderPayload(
-  checkoutResult,
-  { id: 123, name: 'John Doe' },
-  {
-    promocode: 'SAVE10',
-    isReorder: false
-  }
-);
-
-// Send to your backend API
-fetch('/api/orders', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(orderPayload)
-});
-```
+---
 
 ## API Reference
 
-### Main Functions
+### `checkout(config: CheckoutConfig): CheckoutResult`
+Main function to compute all totals.
 
-#### `checkout(config: CheckoutConfig): CheckoutResult`
-
-The main function that orchestrates all calculations.
-
-**Parameters:**
-- `config`: Configuration object containing cart items, offers, and settings
+**Config keys:**
+- `menuItems`: Array of cart items
+- `offers`: Array of offer items
+- `promoCodeDiscount`: Number, fixed discount applied first
+- `loyaltyDiscount`: Number, applied after promo code
+- `deliveryFeesEgp`: Number, delivery fee (if any)
+- `dineinPercentage`: Number, optional dine-in charge as %
+- `dineinFixed`: Number, optional dine-in fixed charge
 
 **Returns:**
-- `CheckoutResult`: Object containing priced items, offers, and calculated totals
-
-### Individual Engines
-
-#### Items Engine
-- `calcItemPrices(item: CartItem): PricedCartItem`
-
-#### Offers Engine
-- `calcOfferPrices(offer: OfferItem): PricedOfferItem`
-
-#### Cart Totals Engine
-- `sumCart(items: (PricedCartItem | PricedOfferItem)[]): CartTotals`
-
-#### Delivery Engine
-- `calcDeliveryFees(config): DeliveryFees`
-
-#### Dine-in Engine
-- `calcDineinCharge(netTotal: number, config: DineinConfig): number`
-
-#### Promocode Engine
-- `applyPromocode(amount: number, config: PromocodeConfig): number`
-
-#### Loyalty Engine
-- `applyLoyalty(amount: number, userPointsInfo: UserPointsInfo): LoyaltyResult`
-
-## Types
-
-### Core Types
-
-```typescript
-interface CartItem {
-  id: number;
-  quantity: number;
-  extras?: ExtraItem[];
-  replacements?: ExtraItem[];
-  comboOption?: ComboOption;
-  size: { fullData?: { net_price: number; total_price: number } };
-}
-
-interface OfferItem {
-  id: number;
-  quantity: number;
-  sandwiches: Array<{ menu_item_size_price?: { net_price: number; total_price: number } }>;
-  fries: Array<{ menu_item_size_price?: { net_price: number; total_price: number } }>;
-  drink: Array<{ menu_item_size_price?: { net_price: number; total_price: number } }>;
-  fullOfferData?: { net_price: number; total_price: number };
-}
-
-interface CheckoutConfig {
-  menuItems: CartItem[];
-  offers: OfferItem[];
-  deliveryType: 1 | 2 | 3;
-  branchConfig: { /* ... */ };
-  addressConfig?: { /* ... */ };
-  promocodeFixed?: number;
-  promocodePercentage?: number;
-  dineinFixed?: number;
-  dineinPercentage?: number;
-  userPointsInfo?: UserPointsInfo;
+```ts
+interface CheckoutResult {
+  subTotal: number;
+  subTotalWithVat: number;
+  Totalvat: number;
+  promocodeDiscountAmount: number;
+  loyaltyDiscountAmount: number;
+  finalTotal: number;
+  vatSubTotal: number;
 }
 ```
 
-## Development
+---
 
-### Setup
+## Developer Guide
 
-```bash
-git clone <repository>
-cd buffalo-burger-calculations
-npm install
-```
-
-### Build
-
-```bash
-npm run build
-```
-
-### Test
-
+### 🧪 Run Tests
 ```bash
 npm test
 ```
 
-### Type Check
+### ⚙️ Build Package
+```bash
+npm run build
+```
 
+### 🔍 Type Check
 ```bash
 npm run type-check
 ```
 
+---
+
+## Contribution
+
+1. Fork the repo
+2. Create a branch
+3. Write your changes with tests
+4. Submit a PR ✅
+
+---
+
 ## License
-
-MIT
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request 
+MIT © Buffalo Tech
