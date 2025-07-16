@@ -1,19 +1,19 @@
 import { sumCart } from './engines/cart-totals';
 import { calcDineinCharge } from './engines/dinein';
 import { CheckoutConfig } from './models/CheckoutConfig';
-import { calcItemPrices, collectPricedCartItems, PricedCartItem } from './engines/items';
+import { calcItemPrices, collectPricedCartItems } from './engines/items';
 import { applyDiscountsInOrder } from './engines/discount';
 import { calculateVatDetails } from './engines/vat';
 import { calculateFinalTotal } from './engines/final-total';
 import { validateCheckoutConfig } from './validation/validation';
-import { appTypeMap, calculatePromocodeValue } from './engines/promocode';
+import { calculatePromocodeValue } from './engines/promocode';
 
 export interface CheckoutResult {
   subTotal: number;
   subTotalWithVat: number;
   Totalvat: number;
   promocodeDiscountAmount: number;
-  loyaltyDiscountAmount: number;
+  loyalityApplied: number;
   finalTotal: number;
   vatSubTotal: number;
 }
@@ -24,7 +24,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
     menuItems,
     offers,
     deliveryFeesEgp = 0,
-    loyaltyDiscount = 0,
+    loyaltyBalance = 0,
     dineinPercentage = 0,
     dineinFixed = 0,
     coupon,
@@ -36,7 +36,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
   const pricedOffers = offers ? calcItemPrices(offers) : undefined;
   const pricedCartItems = collectPricedCartItems(
     pricedItems,
-    coupon?.data?.excludes_offers ? undefined : pricedOffers
+    pricedOffers
   );
 
   const { totalNetPrice, totalPriceWithVat } = sumCart(pricedCartItems);
@@ -55,7 +55,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
     appType
   );
 
-  let effectiveLoyaltyDiscount = loyaltyDiscount;
+  let effectiveLoyaltyDiscount = loyaltyBalance;
   if (!coupon?.data.allow_loyalty) {
     effectiveLoyaltyDiscount = 0;
   }
@@ -83,7 +83,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
   return {
     subTotal: Number(totalNetPrice.toFixed(2)),
     subTotalWithVat: Number(totalPriceWithVat.toFixed(2)),
-    loyaltyDiscountAmount: Number(appliedLoyalty.toFixed(2)),
+    loyalityApplied: Number(appliedLoyalty.toFixed(2)),
     promocodeDiscountAmount: Number(appliedPromo.toFixed(2)),
     vatSubTotal: Number(vatSubTotal.toFixed(2)),
     Totalvat: Number(totalVat.toFixed(2)),
