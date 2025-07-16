@@ -6,14 +6,14 @@ describe('checkout (unit tests, all cases)', () => {
     const config: CheckoutConfig = {
       menuItems: [],
       offers: [],
-      loyaltyDiscount: 0,
+      loyaltyBalance: 0,
     } as any;
 
     const result = checkout(config);
     expect(result.subTotal).toBe(0);
     expect(result.subTotalWithVat).toBe(0);
     expect(result.vatSubTotal).toBe(0);
-    expect(result.loyaltyDiscountAmount).toBe(0);
+    expect(result.loyalityApplied).toBe(0);
     expect(result.promocodeDiscountAmount).toBe(0);
     expect(result.Totalvat).toBe(0);
     expect(result.finalTotal).toBe(0);
@@ -25,7 +25,7 @@ describe('checkout (unit tests, all cases)', () => {
         { quantity: 1, required_netPrice: 83.33, required_totalPrice: 95 },
       ],
       offers: [],
-      loyaltyDiscount: 0,
+      loyaltyBalance: 0,
     } as any;
 
     const result = checkout(config);
@@ -35,7 +35,7 @@ describe('checkout (unit tests, all cases)', () => {
     expect(result.vatSubTotal).toBeCloseTo(11.67, 2);
     expect(result.Totalvat).toBeCloseTo(11.67, 2);
     expect(result.finalTotal).toBeCloseTo(95, 2);
-    expect(result.loyaltyDiscountAmount).toBe(0);
+    expect(result.loyalityApplied).toBe(0);
     expect(result.promocodeDiscountAmount).toBe(0);
   });
 
@@ -47,7 +47,7 @@ describe('checkout (unit tests, all cases)', () => {
       ] as IItem[],
       dineinFixed: 50,
       dineinPercentage: 0,
-      loyaltyDiscount: 0,
+      loyaltyBalance: 0,
       deliveryType:deliveryType.DELIVERY,
       appType:1
     };
@@ -69,7 +69,7 @@ describe('checkout (unit tests, all cases)', () => {
       offers: [
         { quantity: 1, required_netPrice: 50, required_totalPrice: 57 }
       ] as IItem[],
-      loyaltyDiscount: 0,
+      loyaltyBalance: 0,
       deliveryType:deliveryType.DELIVERY,
       appType:1
     };
@@ -90,7 +90,7 @@ describe('checkout (unit tests, all cases)', () => {
       ] as IItem[],
       dineinFixed: 5,
       deliveryFeesEgp: 8,
-      loyaltyDiscount: 0,
+      loyaltyBalance: 0,
       deliveryType:deliveryType.DELIVERY,
       appType:1
     };
@@ -107,7 +107,7 @@ describe('checkout (unit tests, all cases)', () => {
         { quantity: 2, required_netPrice: 50, required_totalPrice: 57 },
       ] as IItem[],
       offers: [],
-      loyaltyDiscount: 20,
+      loyaltyBalance: 20,
       coupon: {
         valid: true,
         error_message: '',
@@ -145,7 +145,7 @@ describe('checkout (unit tests, all cases)', () => {
     expect(result.vatSubTotal).toBeCloseTo(14, 2);
     expect(result.Totalvat).toBeCloseTo(expectedTotalVat, 2); // = 11.2
     expect(result.finalTotal).toBeCloseTo(expectedFinal, 2); // should match 94
-    expect(result.loyaltyDiscountAmount).toEqual(20);
+    expect(result.loyalityApplied).toEqual(20);
     expect(result.promocodeDiscountAmount).toBe(0);
   });
   
@@ -175,7 +175,7 @@ describe('checkout (unit tests, all cases)', () => {
           ...{} as any
         },
       },
-      loyaltyDiscount: 0,
+      loyaltyBalance: 0,
       deliveryType:deliveryType.PICKUP,
       appType:1
     };
@@ -190,7 +190,7 @@ describe('checkout (unit tests, all cases)', () => {
     expect(result.subTotal).toEqual(120);
     expect(result.Totalvat).toBeCloseTo(expectedVatOnDiscounted);
     expect(result.finalTotal).toBeCloseTo(expectedTotal);
-    expect(result.loyaltyDiscountAmount).toBe(0);
+    expect(result.loyalityApplied).toBe(0);
     expect(result.promocodeDiscountAmount).toEqual(36);
   });
   
@@ -219,7 +219,7 @@ describe('checkout (unit tests, all cases)', () => {
         },
       },
       dineinFixed: 40,
-      loyaltyDiscount: 30,
+      loyaltyBalance: 30,
       deliveryType:deliveryType.PICKUP,
       appType:1
     };
@@ -238,7 +238,7 @@ describe('checkout (unit tests, all cases)', () => {
     expect(result.subTotal).toEqual(200);
     expect(result.Totalvat).toBeCloseTo(expectedTotalVat);
     expect(result.finalTotal).toEqual(expectedTotal);
-    expect(result.loyaltyDiscountAmount).toBeCloseTo(30);
+    expect(result.loyalityApplied).toBeCloseTo(30);
     expect(result.promocodeDiscountAmount).toBeCloseTo(20);
   });
   
@@ -266,7 +266,7 @@ describe('checkout (unit tests, all cases)', () => {
           ...{} as any
         },
       },
-      loyaltyDiscount: 25,
+      loyaltyBalance: 25,
       deliveryType:deliveryType.PICKUP,
       appType:1
     };
@@ -275,7 +275,7 @@ describe('checkout (unit tests, all cases)', () => {
     // capped at net price
     expect(result.subTotal).toBeCloseTo(40, 2);
     expect(result.finalTotal).toBeGreaterThanOrEqual(0);
-    expect(result.loyaltyDiscountAmount).toBeGreaterThanOrEqual(15);
+    expect(result.loyalityApplied).toBeGreaterThanOrEqual(15);
     expect(result.promocodeDiscountAmount).toBeGreaterThanOrEqual(25);
   });
   
@@ -287,7 +287,7 @@ describe('checkout (unit tests, all cases)', () => {
       ] as IItem[],
       offers: [],
       deliveryFeesEgp: 10,
-      loyaltyDiscount: 0,
+      loyaltyBalance: 0,
       deliveryType:deliveryType.DELIVERY,
       appType:1
     };
@@ -302,7 +302,7 @@ describe('checkout (unit tests, all cases)', () => {
   
   it('ignores expired coupon', () => {
     const config: CheckoutConfig = {
-      loyaltyDiscount:0,
+      loyaltyBalance:0,
       menuItems: [{ quantity: 1, required_netPrice: 100, required_totalPrice: 114 }],
       coupon: {
         valid: true,
@@ -332,7 +332,7 @@ describe('checkout (unit tests, all cases)', () => {
 
   it('applies free delivery discount as promo', () => {
     const config: CheckoutConfig = {
-      loyaltyDiscount:2,
+      loyaltyBalance:2,
       promoCodeDiscount:0,
       menuItems: [{ quantity: 1, required_netPrice: 100, required_totalPrice: 114 }],
       deliveryFeesEgp: 20,
@@ -366,7 +366,7 @@ describe('checkout (unit tests, all cases)', () => {
   it('ignores loyalty discount if coupon disallows it', () => {
     const config: CheckoutConfig = {
       menuItems: [{ quantity: 1, required_netPrice: 100, required_totalPrice: 114 }],
-      loyaltyDiscount: 30,
+      loyaltyBalance: 30,
       promoCodeDiscount:0,
       coupon: {
         valid: true,
@@ -390,7 +390,7 @@ describe('checkout (unit tests, all cases)', () => {
     } as any;
   
     const result = checkout(config);
-    expect(result.loyaltyDiscountAmount).toBe(0);
+    expect(result.loyalityApplied).toBe(0);
     expect(result.promocodeDiscountAmount).toBe(10);
     expect(result.finalTotal).toBe(104);
   });
@@ -398,7 +398,7 @@ describe('checkout (unit tests, all cases)', () => {
   
   it('ignores coupon if basket is below min_basket', () => {
     const config: CheckoutConfig = {
-      loyaltyDiscount:0,
+      loyaltyBalance:0,
       menuItems: [{ quantity: 1, required_netPrice: 40, required_totalPrice: 45.6 }],
       coupon: {
         valid: true,
