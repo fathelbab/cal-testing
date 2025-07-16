@@ -12,7 +12,7 @@ export interface CheckoutConfig {
   menuItems?: Item[];
   offers?: Item[];
   deliveryFeesEgp?: number;
-  loyaltyDiscount?: number;
+  loyaltyBalance?: number;
   dineinPercentage?: number;
   dineinFixed?: number;
   coupon?: IPromocodeConfig;
