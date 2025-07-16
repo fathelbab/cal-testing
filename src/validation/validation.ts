@@ -46,7 +46,6 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     offers,
     deliveryFeesEgp,
     loyaltyDiscount,
-    promoCodeDiscount,
     dineinPercentage,
     dineinFixed,
   } = config;
@@ -67,10 +66,6 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
 
   if (typeof loyaltyDiscount !== 'number' || loyaltyDiscount < 0) {
     throw new ValidationError('loyaltyDiscount must be a non-negative number.');
-  }
-
-  if (typeof promoCodeDiscount !== 'number' || promoCodeDiscount < 0) {
-    throw new ValidationError('promoCodeDiscount must be a non-negative number.');
   }
 
   if (deliveryFeesEgp !== undefined && (typeof deliveryFeesEgp !== 'number' || deliveryFeesEgp < 0)) {
