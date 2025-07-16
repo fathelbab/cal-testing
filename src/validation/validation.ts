@@ -45,7 +45,7 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     menuItems,
     offers,
     deliveryFeesEgp,
-    loyaltyDiscount,
+    loyaltyBalance,
     dineinPercentage,
     dineinFixed,
   } = config;
@@ -64,7 +64,7 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     offers.forEach(validateOfferItem);
   }
 
-  if (typeof loyaltyDiscount !== 'number' || loyaltyDiscount < 0) {
+  if (typeof loyaltyBalance !== 'number' || loyaltyBalance < 0) {
     throw new ValidationError('loyaltyDiscount must be a non-negative number.');
   }
 
