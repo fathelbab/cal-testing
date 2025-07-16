@@ -6,8 +6,8 @@ A TypeScript-based calculation engine for Buffalo Burger orders. This package ha
 
 - 🍔 **Item & Offer Pricing**: Handles combos, extras, and replacements
 - 🚚 **Delivery & Dine-in**: Calculates extra charges with VAT support
-- 🎫 **Promo Code Logic**: Fixed or percentage discounts, applied first
-- ⭐ **Loyalty Discount**: Capped to net total after promo
+- 🎫 **Promo Code Logic**: Supports advanced coupon logic (fixed, percentage, free delivery, item-specific, app type, etc.)
+- ⭐ **Loyalty Discount**: Capped to net total after promo, and can be disabled by coupon
 - 🧾 **VAT Accuracy**: Always calculated on post-discount net total
 - ✅ **Well-tested**: Comes with a comprehensive Jest test suite
 
@@ -17,8 +17,8 @@ A TypeScript-based calculation engine for Buffalo Burger orders. This package ha
 
 | Step | Rule |
 |------|------|
-| 1    | **Promo code discount** is applied first, up to the full net cart value |
-| 2    | **Loyalty discount** is applied to the remaining net value after promo code |
+| 1    | **Promo code/coupon discount** is applied first, up to the full net cart value |
+| 2    | **Loyalty discount** is applied to the remaining net value after promo code, unless coupon disables it |
 | 3    | **Net price after all discounts will never go below zero** |
 | 4    | **VAT is calculated only on the non-negative net price after discounts** |
 | 5    | If discounts fully cover the cart, **VAT is zero (never negative)** |
@@ -30,8 +30,10 @@ const config: CheckoutConfig = {
     { quantity: 1, required_netPrice: 40, required_totalPrice: 45.6 },
   ],
   offers: [],
-  promoCodeDiscount: 25, // applied first
-  loyaltyDiscount: 25,   // applied to the remainder (only 15 will be used)
+  coupon: { /* see below for coupon structure */ },
+  loyaltyDiscount: 25,   // applied to the remainder (only if coupon allows)
+  deliveryType: 'DELIVERY',
+  appType: 1, // 1=mobile, 2=web, 3=kiosk, 10=all
 };
 const result = checkout(config);
 console.log(result);
@@ -79,7 +81,7 @@ const config: CheckoutConfig = {
      },
   ],
   deliveryFeesEgp: 10,
-  promoCodeDiscount: 5,
+  promoCodeDiscount: 5, // Used only if coupon is not present
   loyaltyDiscount: 3,
 };
 
@@ -87,30 +89,64 @@ const result = checkout(config);
 console.log(result.finalTotal);
 ```
 
-### 🔧 Advanced Configuration
+### 🔧 Advanced Configuration (with coupon)
 ```ts
+import { checkout, CheckoutConfig, IPromocodeConfig } from 'buffalo-burger-calculations';
+
+const coupon: IPromocodeConfig = {
+  valid: true,
+  error_message: '',
+  coupon_discount_items: [],
+  data: {
+    id: 1,
+    code: 'SAVE20',
+    is_active: true,
+    discount_type: 'percentage',
+    discount_value: 20,
+    start_date: 1680000000000,
+    end_date: 1890000000000,
+    min_basket: 50,
+    delivery_type: 'all',
+    allowedAppTypeId: 1,
+    excludes_offers: false,
+    allow_loyalty: false, // disables loyalty discount
+    // ...other fields
+  }
+};
+
 const config: CheckoutConfig = {
   menuItems: [/* items */],
   offers: [/* offers */],
   dineinPercentage: 5,
   dineinFixed: 0,
-  promoCodeDiscount: 30,
-  loyaltyDiscount: 50,
+  coupon,
+  loyaltyDiscount: 50, // will be ignored if coupon.data.allow_loyalty is false
   deliveryFeesEgp: 15,
+  deliveryType: 'DELIVERY',
+  appType: 1,
 };
 
 const result = checkout(config);
- result interface is 
- // {
-//   subTotal: 40,
-//   subTotalWithVat: 45.6,
-//   promocodeDiscountAmount: 25,
-//   loyaltyDiscountAmount: 15,
-//   vatSubTotal: 5.6,
-//   Totalvat: 0,
-//   finalTotal: 0
+// result interface is:
+// {
+//   subTotal: ...,
+//   subTotalWithVat: ...,
+//   promocodeDiscountAmount: ...,
+//   loyaltyDiscountAmount: ...,
+//   vatSubTotal: ...,
+//   Totalvat: ...,
+//   finalTotal: ...
 // }
 ```
+
+---
+
+## Coupon & Promo Code Logic
+
+- The `coupon` object supports advanced logic: minimum basket, delivery type, app type, start/end date, excludes offers, disables loyalty, and more.
+- If a valid coupon is present, it overrides `promoCodeDiscount`.
+- If `coupon.data.allow_loyalty` is false, loyalty discount is ignored.
+- The promo code value is calculated using the `calculatePromocodeValue` function, which takes into account all coupon rules and the current order context.
 
 ---
 
@@ -122,11 +158,14 @@ Main function to compute all totals.
 **Config keys:**
 - `menuItems`: Array of cart items
 - `offers`: Array of offer items
-- `promoCodeDiscount`: Number, fixed discount applied first
-- `loyaltyDiscount`: Number, applied after promo code
+- `promoCodeDiscount`: Number, fixed discount applied first (used only if coupon is not present)
+- `loyaltyDiscount`: Number, applied after promo code (ignored if coupon disables loyalty)
 - `deliveryFeesEgp`: Number, delivery fee (if any)
 - `dineinPercentage`: Number, optional dine-in charge as %
 - `dineinFixed`: Number, optional dine-in fixed charge
+- `coupon`: Coupon object for advanced promo logic (see above)
+- `deliveryType`: String, e.g. 'DELIVERY', 'PICKUP', 'DINEIN'
+- `appType`: Number, e.g. 1=mobile, 2=web, 3=kiosk, 10=all
 
 **Returns:**
 ```ts
@@ -140,6 +179,13 @@ interface CheckoutResult {
   vatSubTotal: number;
 }
 ```
+
+---
+
+## Coupon Calculation Utility
+
+### `calculatePromocodeValue(coupon, totalNetPrice, deliveryFeesEgp, deliveryType, appType): number`
+Calculates the promo code value based on all coupon rules and the current order context. Used internally by `checkout`.
 
 ---
 
