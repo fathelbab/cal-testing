@@ -1,15 +1,21 @@
 import { Item } from '../engines/items';
 import { IPromocodeConfig } from '../engines/promocode';
 
+export enum deliveryType {
+  DELIVERY =  "DELIVERY",
+  PICKUP= "PICKUP",
+  DINEIN= "DINEIN"
+}
 
 
 export interface CheckoutConfig {
   menuItems?: Item[];
   offers?: Item[];
-  deliveryFeesEgp?:number;
-  loyaltyDiscount?:number;
-  promoCodeDiscount?:number;
-  dineinPercentage?:number;
-  dineinFixed?:number;
-  coupon?:IPromocodeConfig
+  deliveryFeesEgp?: number;
+  loyaltyDiscount?: number;
+  dineinPercentage?: number;
+  dineinFixed?: number;
+  coupon?: IPromocodeConfig;
+  deliveryType: deliveryType;
+  appType: number;
 } 
