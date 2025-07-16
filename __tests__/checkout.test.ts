@@ -1,4 +1,4 @@
-import { checkout, CheckoutConfig, IItem } from '../src/index';
+import { checkout, CheckoutConfig, deliveryType, IItem } from '../src/index';
 
 describe('checkout (unit tests, all cases)', () => {
 
@@ -7,7 +7,6 @@ describe('checkout (unit tests, all cases)', () => {
       menuItems: [],
       offers: [],
       loyaltyDiscount: 0,
-      promoCodeDiscount: 0,
     } as any;
 
     const result = checkout(config);
@@ -27,7 +26,6 @@ describe('checkout (unit tests, all cases)', () => {
       ],
       offers: [],
       loyaltyDiscount: 0,
-      promoCodeDiscount: 0,
     } as any;
 
     const result = checkout(config);
@@ -50,7 +48,8 @@ describe('checkout (unit tests, all cases)', () => {
       dineinFixed: 50,
       dineinPercentage: 0,
       loyaltyDiscount: 0,
-      promoCodeDiscount: 0,
+      deliveryType:deliveryType.DELIVERY,
+      appType:1
     };
 
     const result = checkout(config);
@@ -71,7 +70,8 @@ describe('checkout (unit tests, all cases)', () => {
         { quantity: 1, required_netPrice: 50, required_totalPrice: 57 }
       ] as IItem[],
       loyaltyDiscount: 0,
-      promoCodeDiscount: 0,
+      deliveryType:deliveryType.DELIVERY,
+      appType:1
     };
 
     const result = checkout(config);
@@ -91,7 +91,8 @@ describe('checkout (unit tests, all cases)', () => {
       dineinFixed: 5,
       deliveryFeesEgp: 8,
       loyaltyDiscount: 0,
-      promoCodeDiscount: 0,
+      deliveryType:deliveryType.DELIVERY,
+      appType:1
     };
 
     expect(() => checkout(config)).toThrow(
@@ -107,7 +108,25 @@ describe('checkout (unit tests, all cases)', () => {
       ] as IItem[],
       offers: [],
       loyaltyDiscount: 20,
-      promoCodeDiscount: 0,
+      coupon: {
+        valid: true,
+        error_message: '',
+        coupon_discount_items: [],
+        data: {
+          is_active: true,
+          discount_type: 'free_delivery',
+          discount_value: 0,
+          start_date: Date.now() - 10000,
+          end_date: Date.now() + 10000,
+          delivery_type: 'delivery_only',
+          min_basket: 0,
+          allow_loyalty: true,
+          allowedAppTypeId: 1,
+          ...{} as any
+        },
+      },
+      deliveryType:deliveryType.DELIVERY,
+      appType:1
     };
   
     const result = checkout(config);
@@ -139,8 +158,26 @@ describe('checkout (unit tests, all cases)', () => {
         { quantity: 1, required_netPrice: 120, required_totalPrice: 136.8 }
       ] as IItem[],
       offers: [],
+      coupon: {
+        valid: true,
+        error_message: '',
+        coupon_discount_items: [],
+        data: {
+          is_active: true,
+          discount_type: 'fixed',
+          discount_value: 36,
+          start_date: Date.now() - 10000,
+          end_date: Date.now() + 10000,
+          delivery_type: 'pickup_only',
+          min_basket: 0,
+          allow_loyalty: true,
+          allowedAppTypeId: 1,
+          ...{} as any
+        },
+      },
       loyaltyDiscount: 0,
-      promoCodeDiscount: 36,
+      deliveryType:deliveryType.PICKUP,
+      appType:1
     };
   
     const result = checkout(config);
@@ -164,9 +201,27 @@ describe('checkout (unit tests, all cases)', () => {
         { quantity: 1, required_netPrice: 200, required_totalPrice: 228 },
       ] as IItem[],
       offers: [],
+      coupon: {
+        valid: true,
+        error_message: '',
+        coupon_discount_items: [],
+        data: {
+          is_active: true,
+          discount_type: 'fixed',
+          discount_value: 20,
+          start_date: Date.now() - 10000,
+          end_date: Date.now() + 10000,
+          delivery_type: 'pickup_only',
+          min_basket: 0,
+          allow_loyalty: true,
+          allowedAppTypeId: 1,
+          ...{} as any
+        },
+      },
       dineinFixed: 40,
       loyaltyDiscount: 30,
-      promoCodeDiscount: 20,
+      deliveryType:deliveryType.PICKUP,
+      appType:1
     };
   
     const result = checkout(config);
@@ -194,8 +249,26 @@ describe('checkout (unit tests, all cases)', () => {
         { quantity: 1, required_netPrice: 40, required_totalPrice: 45.6 },
       ] as IItem[],
       offers: [],
+      coupon: {
+        valid: true,
+        error_message: '',
+        coupon_discount_items: [],
+        data: {
+          is_active: true,
+          discount_type: 'fixed',
+          discount_value: 25,
+          start_date: Date.now() - 10000,
+          end_date: Date.now() + 10000,
+          delivery_type: 'pickup_only',
+          min_basket: 0,
+          allow_loyalty: true,
+          allowedAppTypeId: 1,
+          ...{} as any
+        },
+      },
       loyaltyDiscount: 25,
-      promoCodeDiscount: 25,
+      deliveryType:deliveryType.PICKUP,
+      appType:1
     };
   
     const result = checkout(config);
@@ -215,7 +288,8 @@ describe('checkout (unit tests, all cases)', () => {
       offers: [],
       deliveryFeesEgp: 10,
       loyaltyDiscount: 0,
-      promoCodeDiscount: 0,
+      deliveryType:deliveryType.DELIVERY,
+      appType:1
     };
   
     const result = checkout(config);
@@ -224,6 +298,131 @@ describe('checkout (unit tests, all cases)', () => {
     const deliveryVat = 10 * 0.14;
     expect(result.Totalvat).toBeCloseTo(vat + deliveryVat, 2);
     expect(result.finalTotal).toBeCloseTo(124, 2);
+  });
+  
+  it('ignores expired coupon', () => {
+    const config: CheckoutConfig = {
+      loyaltyDiscount:0,
+      menuItems: [{ quantity: 1, required_netPrice: 100, required_totalPrice: 114 }],
+      coupon: {
+        valid: true,
+        error_message: '',
+        coupon_discount_items: [],
+        data: {
+          is_active: true,
+          discount_type: 'fixed',
+          discount_value: 20,
+          start_date: Date.now() - 100000000,
+          end_date: Date.now() - 50000000,
+          delivery_type: 'all',
+          min_basket: 0,
+          allow_loyalty: true,
+          allowedAppTypeId: 1,
+          ...{} as any // باقي الخصائص الافتراضية
+        },
+      },
+      appType: 1,
+      deliveryType: 'DELIVERY',
+    } as any;
+  
+    const result = checkout(config);
+    expect(result.promocodeDiscountAmount).toBe(0);
+  });
+  
+
+  it('applies free delivery discount as promo', () => {
+    const config: CheckoutConfig = {
+      loyaltyDiscount:2,
+      promoCodeDiscount:0,
+      menuItems: [{ quantity: 1, required_netPrice: 100, required_totalPrice: 114 }],
+      deliveryFeesEgp: 20,
+      coupon: {
+        valid: true,
+        error_message: '',
+        coupon_discount_items: [],
+        data: {
+          is_active: true,
+          discount_type: 'free_delivery',
+          discount_value: 0,
+          start_date: Date.now() - 10000,
+          end_date: Date.now() + 10000,
+          delivery_type: 'delivery_only',
+          min_basket: 0,
+          allow_loyalty: true,
+          allowedAppTypeId: 1,
+          ...{} as any
+        },
+      },
+      appType: 1,
+      deliveryType: 'DELIVERY',
+    } as any;
+  
+    const result = checkout(config);
+    expect(result.promocodeDiscountAmount).toEqual(20);
+    expect(result.finalTotal).toBeCloseTo(112, 2); // no delivery fee applied
+  });
+
+
+  it('ignores loyalty discount if coupon disallows it', () => {
+    const config: CheckoutConfig = {
+      menuItems: [{ quantity: 1, required_netPrice: 100, required_totalPrice: 114 }],
+      loyaltyDiscount: 30,
+      promoCodeDiscount:0,
+      coupon: {
+        valid: true,
+        error_message: '',
+        coupon_discount_items: [],
+        data: {
+          is_active: true,
+          discount_type: 'fixed',
+          discount_value: 10,
+          start_date: Date.now() - 10000,
+          end_date: Date.now() + 10000,
+          delivery_type: 'all',
+          min_basket: 0,
+          allow_loyalty: false,
+          allowedAppTypeId: 1,
+          ...{} as any
+        },
+      },
+      appType: 1,
+      deliveryType: 'PICKUP',
+    } as any;
+  
+    const result = checkout(config);
+    expect(result.loyaltyDiscountAmount).toBe(0);
+    expect(result.promocodeDiscountAmount).toBe(10);
+    expect(result.finalTotal).toBe(104);
+  });
+  
+  
+  it('ignores coupon if basket is below min_basket', () => {
+    const config: CheckoutConfig = {
+      loyaltyDiscount:0,
+      menuItems: [{ quantity: 1, required_netPrice: 40, required_totalPrice: 45.6 }],
+      coupon: {
+        valid: true,
+        error_message: '',
+        coupon_discount_items: [],
+        data: {
+          is_active: true,
+          discount_type: 'percentage',
+          discount_value: 10,
+          start_date: Date.now() - 10000,
+          end_date: Date.now() + 10000,
+          delivery_type: 'all',
+          min_basket: 100, // ← backet less than that
+          allow_loyalty: true,
+          allowedAppTypeId: 1,
+          ...{} as any
+        },
+      },
+      appType: 1,
+      deliveryType: 'DELIVERY',
+    } as any;
+  
+    const result = checkout(config);
+    expect(result.promocodeDiscountAmount).toBe(0);
   });
   
 
