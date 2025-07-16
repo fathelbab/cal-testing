@@ -1,6 +1,6 @@
 {
   "name": "buffalo-burger-calculations",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A cart calculation engine for buffalo burger restaurants",
   "type": "module",
   "main": "dist/index.cjs.js",
