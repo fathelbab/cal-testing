@@ -1,5 +1,4 @@
 import { sumCart } from './engines/cart-totals';
-import { calcDineinCharge } from './engines/dinein';
 import { CheckoutConfig } from './models/CheckoutConfig';
 import { calcItemPrices, collectPricedCartItems } from './engines/items';
 import { applyDiscountsInOrder } from './engines/discount';
@@ -25,8 +24,8 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
     offers,
     deliveryFeesEgp = 0,
     loyaltyBalance = 0,
-    dineinPercentage = 0,
-    dineinFixed = 0,
+    dineinExtraChargeWithVat=0,
+    dineinExtraCharge=0,
     coupon,
     deliveryType,
     appType
@@ -41,9 +40,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
 
   const { totalNetPrice, totalPriceWithVat } = sumCart(pricedCartItems);
 
-  const dineinCharge = dineinFixed || dineinPercentage
-    ? calcDineinCharge(totalNetPrice, { fixed: dineinFixed, percentage: dineinPercentage })
-    : 0;
+  
   const vatSubTotal = totalPriceWithVat - totalNetPrice;
 
   //  calc coupon amount
@@ -66,7 +63,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
   const { totalVat } = calculateVatDetails(
     totalNetPrice,
     totalPriceWithVat,
-    dineinCharge,
+    dineinExtraCharge,
     deliveryFeesEgp,
     appliedPromo,
     appliedLoyalty
@@ -74,7 +71,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
 
   const finalTotal = calculateFinalTotal({
     totalPriceWithVat,
-    dineinCharge,
+   dineinExtraChargeWithVat,
     deliveryFeesEgp,
     loyaltyDiscount: effectiveLoyaltyDiscount ?? 0,
     promocodeDiscount: promoValue ?? 0
@@ -96,7 +93,6 @@ export * from './models/CartItem';
 export * from './models/CheckoutConfig';
 export * from './engines/items';
 export * from './engines/cart-totals';
-export * from './engines/dinein';
 export * from './engines/discount';
 export * from './engines/final-total';
 export * from './engines/vat';
