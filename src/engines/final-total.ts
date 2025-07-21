@@ -1,6 +1,6 @@
 export interface FinalTotalInput {
   totalPriceWithVat: number;
-  dineinCharge?: number;
+  dineinExtraChargeWithVat?: number;
   deliveryFeesEgp?: number;
   loyaltyDiscount: number;
   promocodeDiscount: number;
@@ -10,12 +10,12 @@ export interface FinalTotalInput {
 
 export function calculateFinalTotal({
   totalPriceWithVat,
-  dineinCharge,
+  dineinExtraChargeWithVat,
   deliveryFeesEgp,
   loyaltyDiscount,
   promocodeDiscount,
 }: FinalTotalInput): number {
-  const charges = (dineinCharge ?? 0) + (deliveryFeesEgp ?? 0);
+  const charges = (dineinExtraChargeWithVat ?? 0) + (deliveryFeesEgp ?? 0);
   const totalBeforeDiscount = totalPriceWithVat + charges;
 
   const afterPromo = Math.max(0, totalBeforeDiscount - (promocodeDiscount ?? 0));
