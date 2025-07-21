@@ -261,8 +261,8 @@ const coupon: IPromocodeConfig = {
 const config: CheckoutConfig = {
   menuItems: [/* items */],
   offers: [/* offers */],
-  dineinPercentage: 5,
-  dineinFixed: 0,
+  dineinExtraCharge: 131.67,
+  dineinExtraChargeWithVat:150.10,
   coupon,
   loyaltyBalance: 50, // will be ignored if coupon.data.allow_loyalty is false
   deliveryFeesEgp: 15,
@@ -304,8 +304,8 @@ Main function to compute all totals.
 - `offers`: Array of offer items
 - `loyaltyBalance`: Number, applied after promo code (ignored if coupon disables loyalty)
 - `deliveryFeesEgp`: Number, delivery fee (if any)
-- `dineinPercentage`: Number, optional dine-in charge as %
-- `dineinFixed`: Number, optional dine-in fixed charge
+- `dineinExtraChargeWithVat`: Number, optional dine-in charge gross amount
+- `dineinExtraCharge`: Number, optional dine-in charge net amount
 - `coupon`: Coupon object for advanced promo logic (see above)
 - `deliveryType`: String, e.g. 'DELIVERY', 'PICKUP', 'DINEIN'
 - `appType`: Number, e.g. 1=mobile, 2=web, 3=kiosk, 10=all
