@@ -46,8 +46,8 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     offers,
     deliveryFeesEgp,
     loyaltyBalance,
-    dineinPercentage,
-    dineinFixed,
+    dineinExtraCharge,
+    dineinExtraChargeWithVat,
   } = config;
 
   if (!Array.isArray(menuItems) && !Array.isArray(offers)) {
@@ -72,14 +72,14 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     throw new ValidationError('deliveryFeesEgp must be a non-negative number.');
   }
 
-  if (dineinFixed !== undefined && (typeof dineinFixed !== 'number' || dineinFixed < 0)) {
-    throw new ValidationError('dineinFixed must be a non-negative number.');
+  if (dineinExtraChargeWithVat !== undefined && (typeof dineinExtraChargeWithVat !== 'number' || dineinExtraChargeWithVat < 0)) {
+    throw new ValidationError('dineinExtraChargeWithVat must be a non-negative number.');
   }
 
-  if (dineinPercentage !== undefined && (typeof dineinPercentage !== 'number' || dineinPercentage < 0 || dineinPercentage > 100)) {
-    throw new ValidationError('dineinPercentage must be between 0 and 100.');
+  if (dineinExtraCharge !== undefined && (typeof dineinExtraCharge !== 'number' || dineinExtraCharge < 0 )) {
+    throw new ValidationError('dineinExtraCharge must be a non-negative number.');
   }
-const hasDinein = (dineinFixed ?? 0) > 0 || (dineinPercentage ?? 0) > 0;
+const hasDinein = (dineinExtraCharge ?? 0) > 0 && (dineinExtraChargeWithVat ?? 0) > 0;
 const hasDelivery = (deliveryFeesEgp ?? 0) > 0;
 
 if (hasDinein && hasDelivery) {
