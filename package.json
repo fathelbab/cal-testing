@@ -1,26 +1,27 @@
 {
-  "name": "buffalo-burger-calculations",
-  "version": "1.0.1",
+  "name": "b-b-calculations",
+  "version": "1.0.3",
   "description": "A cart calculation engine for buffalo burger restaurants",
-  "type": "module",
+  "type": "commonjs",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c --bundleConfigAsCjs",
     "test": "jest",
     "type-check": "tsc --noEmit"
   },
   "keywords": [
     "cart",
     "calculation",
-    "restaurant",
-    "buffalo",
-    "burger"
+    "restaurant"
   ],
   "author": "",
   "license": "MIT",
+  "files": [
+    "dist/"
+  ],
   "devDependencies": {
     "@rollup/plugin-commonjs": "^23.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
