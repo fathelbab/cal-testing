@@ -46,7 +46,6 @@ describe('checkout (unit tests, all cases)', () => {
         { quantity: 1, required_netPrice: 100, required_totalPrice: 105 },
       ] as IItem[],
       dineinExtraCharge: 131.67,
-      dineinExtraChargeWithVat: 150.10,
       loyaltyBalance: 0,
       deliveryType: deliveryType.DINEIN,
       appType: 1,
@@ -91,7 +90,6 @@ describe('checkout (unit tests, all cases)', () => {
         { quantity: 1, required_netPrice: 100, required_totalPrice: 114 }
       ] as IItem[],
       dineinExtraCharge: 131.67,
-      dineinExtraChargeWithVat:150.10,
       deliveryFeesEgp: 8,
       loyaltyBalance: 0,
       deliveryType:deliveryType.DELIVERY,
@@ -222,7 +220,6 @@ describe('checkout (unit tests, all cases)', () => {
         },
       },
       dineinExtraCharge: 131.67,
-      dineinExtraChargeWithVat: 150.10,
       loyaltyBalance: 30,
       deliveryType: deliveryType.DINEIN,
       appType: 1,
