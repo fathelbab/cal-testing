@@ -1,11 +1,11 @@
 import { sumCart } from './engines/cart-totals';
-import { CheckoutConfig } from './models/CheckoutConfig';
-import { calcItemPrices, collectPricedCartItems } from './engines/items';
+import { deliveryType } from './models/CheckoutConfig';
+import { calcItemPrices, collectPricedCartItems, Item } from './engines/items';
 import { applyDiscountsInOrder } from './engines/discount';
 import { calculateVatDetails } from './engines/vat';
 import { calculateFinalTotal } from './engines/final-total';
 import { validateCheckoutConfig } from './validation/validation';
-import { calculatePromocodeValue } from './engines/promocode';
+import { calculatePromocodeValue, IPromocodeConfig } from './engines/promocode';
 
 export interface CheckoutResult {
   subTotal: number;
@@ -17,15 +17,27 @@ export interface CheckoutResult {
   vatSubTotal: number;
 }
 
+export interface CheckoutConfig {
+  menuItems?: Item[];
+  offers?: Item[];
+  deliveryFeesEgp?: number;
+  loyaltyBalance?: number;
+  dineinExtraCharge?: number;
+  coupon?: IPromocodeConfig;
+  deliveryType: deliveryType;
+  appType: number;
+}
+
+
 export function checkout(config: CheckoutConfig): CheckoutResult {
   validateCheckoutConfig(config);
+  let dineinExtraChargeWithVat = 0;
   const {
     menuItems,
     offers,
     deliveryFeesEgp = 0,
     loyaltyBalance = 0,
-    dineinExtraChargeWithVat=0,
-    dineinExtraCharge=0,
+    dineinExtraCharge = 0,
     coupon,
     deliveryType,
     appType
@@ -40,7 +52,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
 
   const { totalNetPrice, totalPriceWithVat } = sumCart(pricedCartItems);
 
-  
+
   const vatSubTotal = totalPriceWithVat - totalNetPrice;
 
   //  calc coupon amount
@@ -68,10 +80,12 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
     appliedPromo,
     appliedLoyalty
   );
-
+  if (dineinExtraCharge && dineinExtraCharge > 0) {
+    dineinExtraChargeWithVat = dineinExtraCharge * 1.14;
+  }
   const finalTotal = calculateFinalTotal({
     totalPriceWithVat,
-   dineinExtraChargeWithVat,
+    dineinExtraChargeWithVat,
     deliveryFeesEgp,
     loyaltyDiscount: effectiveLoyaltyDiscount ?? 0,
     promocodeDiscount: promoValue ?? 0
@@ -87,6 +101,7 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
     finalTotal: Number(finalTotal.toFixed(2)),
   };
 }
+
 
 // Re-export all types and functions for convenience
 export * from './models/CartItem';
