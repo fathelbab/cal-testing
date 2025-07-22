@@ -47,7 +47,6 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     deliveryFeesEgp,
     loyaltyBalance,
     dineinExtraCharge,
-    dineinExtraChargeWithVat,
   } = config;
 
   if (!Array.isArray(menuItems) && !Array.isArray(offers)) {
@@ -72,14 +71,12 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     throw new ValidationError('deliveryFeesEgp must be a non-negative number.');
   }
 
-  if (dineinExtraChargeWithVat !== undefined && (typeof dineinExtraChargeWithVat !== 'number' || dineinExtraChargeWithVat < 0)) {
-    throw new ValidationError('dineinExtraChargeWithVat must be a non-negative number.');
-  }
+
 
   if (dineinExtraCharge !== undefined && (typeof dineinExtraCharge !== 'number' || dineinExtraCharge < 0 )) {
     throw new ValidationError('dineinExtraCharge must be a non-negative number.');
   }
-const hasDinein = (dineinExtraCharge ?? 0) > 0 && (dineinExtraChargeWithVat ?? 0) > 0;
+const hasDinein = (dineinExtraCharge ?? 0) > 0;
 const hasDelivery = (deliveryFeesEgp ?? 0) > 0;
 
 if (hasDinein && hasDelivery) {
