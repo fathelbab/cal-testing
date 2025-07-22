@@ -14,7 +14,6 @@ export interface CheckoutConfig {
   deliveryFeesEgp?: number;
   loyaltyBalance?: number;
   dineinExtraCharge?: number;
-  dineinExtraChargeWithVat?: number;
   coupon?: IPromocodeConfig;
   deliveryType: deliveryType;
   appType: number;
