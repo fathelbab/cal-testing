@@ -1,57 +1,35 @@
-export interface PromocodeConfig {
-  fixed?: number;
-  percentage?: number;
-}
-export interface IPromocodeConfig {
-  data: {
-    allowedDiscountItemsArr: any[];
-    id: number;
-    coupon_type: "checkout" | string;
-    code: string;
-    is_active: boolean;
-    contains_offers: boolean;
-    contains_menu_items: boolean;
-    absolute_no_of_uses: number;
-    no_of_uses: number;
-    discount_type: "percentage" | "fixed" | string;
-    delivery_type: "all" | "delivery_only" | string;
-    discount_value: number;
-    start_date: number;
-    end_date: number;
-    min_basket: number;
-    customer_previous_orders: number;
-    allow_customers: boolean;
-    allow_guests: boolean;
-    allowed_discount_items: IAllowedDiscountItem[];
-    allowed_number_of_discount_items: number;
-    allowed_menu_items: any[];
-    allowed_offers: any[];
-    allowed_branches: any[];
-    limit_customer_previous_orders: boolean;
-    allowedAppTypeId: number;
-    excludes_offers: boolean;
-    allow_loyalty: boolean;
-  };
-  valid: boolean;
-  error_message: string;
-  coupon_discount_items: any[];
-}
+import { IPromocodeConfig, appTypeMap } from '../models/Promocode';
 
-export interface IAllowedDiscountItem {
-  menuItemSizePriceId: number;
-  net_price: number;
-  total_price: number;
-}
-
-export const appTypeMap = {
-  1: 'mobile',
-  2: 'web',
-  3: 'kiosk',
-  10: 'all',
-} as const;
-
-
-
+/**
+ * Calculates the discount value from a given promocode (coupon) based on its configuration
+ * and the current checkout context.
+ *
+ * @param {IPromocodeConfig | undefined} coupon - The promocode configuration object (or undefined if none is applied).
+ * @param {number} totalNetPrice - The total net price of items in the cart (before VAT and fees).
+ * @param {number} deliveryFeesEgp - Delivery fees in EGP.
+ * @param {string} deliveryType - The type of delivery ("DELIVERY", "PICKUP", "DINEIN", etc.).
+ * @param {number} appType - Numeric code representing the app type (mapped in `appTypeMap`).
+ *
+ * @returns {number} The calculated discount amount in EGP. Returns 0 if the promocode is not valid or does not match conditions.
+ *
+ * @example
+ * const coupon = {
+ *   valid: true,
+ *   data: {
+ *     is_active: true,
+ *     start_date: Date.now() - 1000,
+ *     end_date: Date.now() + 100000,
+ *     min_basket: 100,
+ *     delivery_type: 'all',
+ *     discount_type: 'percentage',
+ *     discount_value: 10
+ *   }
+ * };
+ *
+ * const discount = calculatePromocodeValue(coupon, 200, 20, 'DELIVERY', 1);
+ * console.log(discount);
+ * // output 20 (10% of 200)
+ */
 export function calculatePromocodeValue(
   coupon: IPromocodeConfig | undefined,
   totalNetPrice: number,
@@ -89,9 +67,9 @@ export function calculatePromocodeValue(
     case 'percentage':
       return (totalNetPrice * couponData.discount_value) / 100;
     case 'fixed':
-    case 'Absolute':
+    case 'absolute':
       return couponData.discount_value;
-    case 'free_delivery':
+    case 'delivery_free':
       return deliveryFeesEgp;
     default:
       return 0;
