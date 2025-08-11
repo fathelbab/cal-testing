@@ -1,11 +1,18 @@
 {
   "name": "b-b-calculations",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A cart calculation engine for buffalo burger restaurants",
   "type": "commonjs",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "sideEffects": false,
   "scripts": {
     "build": "rollup -c --bundleConfigAsCjs",
