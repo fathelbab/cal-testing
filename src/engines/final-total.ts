@@ -1,22 +1,14 @@
-export interface FinalTotalInput {
-  totalPriceWithVat: number;
-  dineinExtraChargeWithVat?: number;
-  deliveryFeesEgp?: number;
-  loyaltyDiscount: number;
-  promocodeDiscount: number;
-}
-
-
+import { FinalTotalInput } from '../models/FinalTotal';
 
 export function calculateFinalTotal({
-  totalPriceWithVat,
+  itemsTotalPrice,
   dineinExtraChargeWithVat,
-  deliveryFeesEgp,
+  effectiveDeliveryFeesEgp,
   loyaltyDiscount,
   promocodeDiscount,
 }: FinalTotalInput): number {
-  const charges = (dineinExtraChargeWithVat ?? 0) + (deliveryFeesEgp ?? 0);
-  const totalBeforeDiscount = totalPriceWithVat + charges;
+  const charges = (dineinExtraChargeWithVat ?? 0) + (effectiveDeliveryFeesEgp ?? 0);
+  const totalBeforeDiscount = itemsTotalPrice + charges;
 
   const afterPromo = Math.max(0, totalBeforeDiscount - (promocodeDiscount ?? 0));
 
