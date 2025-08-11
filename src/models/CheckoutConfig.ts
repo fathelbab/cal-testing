@@ -1,5 +1,5 @@
-import { Item } from '../engines/items';
-import { IPromocodeConfig } from '../engines/promocode';
+import { Item } from './Items';
+import { IPromocodeConfig } from './Promocode';
 
 export enum deliveryType {
   DELIVERY =  "DELIVERY",
@@ -9,8 +9,8 @@ export enum deliveryType {
 
 
 export interface CheckoutConfig {
-  menuItems?: Item[];
-  offers?: Item[];
+  cartMenuItems?: Item[];
+  cartOffers?: Item[];
   deliveryFeesEgp?: number;
   loyaltyBalance?: number;
   dineinExtraCharge?: number;
