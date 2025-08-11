@@ -12,14 +12,14 @@ function validateMenuItem(item: IItem, index: number): void {
   if (!item || typeof item !== 'object') {
     throw new ValidationError(`menuItems[${index}] must be a valid object.`);
   }
-  if (typeof item.quantity !== 'number' || item.quantity <= 0) {
+  if (typeof item.quantity !== 'number' || item.quantity < 1) {
     throw new ValidationError(`menuItems[${index}].quantity must be a positive number.`);
   }
-  if (typeof item.required_netPrice !== 'number' || item.required_netPrice < 0) {
-    throw new ValidationError(`menuItems[${index}].required_netPrice must be a non-negative number.`);
+  if (typeof item.requiredNetPrice !== 'number' || item.requiredNetPrice < 1) {
+    throw new ValidationError(`menuItems[${index}].requiredNetPrice must be a non-negative number.`);
   }
-  if (typeof item.required_totalPrice !== 'number' || item.required_totalPrice < 0) {
-    throw new ValidationError(`menuItems[${index}].required_totalPrice must be a non-negative number.`);
+  if (typeof item.requiredNetPrice !== 'number' || item.requiredNetPrice < 1) {
+    throw new ValidationError(`menuItems[${index}].requiredNetPrice must be a non-negative number.`);
   }
 }
 
@@ -27,14 +27,14 @@ function validateOfferItem(offer: IItem, index: number): void {
   if (!offer || typeof offer !== 'object') {
     throw new ValidationError(`offers[${index}] must be a valid object.`);
   }
-  if (typeof offer.quantity !== 'number' || offer.quantity <= 0) {
+  if (typeof offer.quantity !== 'number' || offer.quantity < 1) {
     throw new ValidationError(`offers[${index}].quantity must be a positive number.`);
   }
-  if (typeof offer.required_netPrice !== 'number' || offer.required_netPrice < 0) {
-    throw new ValidationError(`offers[${index}].required_netPrice must be a non-negative number.`);
+  if (typeof offer.requiredNetPrice !== 'number' || offer.requiredNetPrice < 1) {
+    throw new ValidationError(`offers[${index}].requiredNetPrice must be a non-negative number.`);
   }
-  if (typeof offer.required_totalPrice !== 'number' || offer.required_totalPrice < 0) {
-    throw new ValidationError(`offers[${index}].required_totalPrice must be a non-negative number.`);
+  if (typeof offer.requiredNetPrice !== 'number' || offer.requiredNetPrice < 1) {
+    throw new ValidationError(`offers[${index}].requiredNetPrice must be a non-negative number.`);
   }
 }
 
@@ -42,29 +42,30 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
   if (!config) throw new ValidationError('Checkout config is required.');
 
   const {
-    menuItems,
-    offers,
+    cartMenuItems,
+    cartOffers,
     deliveryFeesEgp,
     loyaltyBalance,
     dineinExtraCharge,
   } = config;
 
-  if (!Array.isArray(menuItems) && !Array.isArray(offers)) {
-    throw new ValidationError('At least one of menuItems or offers must be provided.');
+  if (!Array.isArray(cartMenuItems) && !Array.isArray(cartOffers)) {
+    throw new ValidationError('At least one of cartMenuItems or cartOffers must be provided.');
   }
 
-  if (menuItems) {
-    if (!Array.isArray(menuItems)) throw new ValidationError('menuItems must be an array.');
-    menuItems.forEach(validateMenuItem);
+  if (cartMenuItems) {
+    if (!Array.isArray(cartMenuItems)) throw new ValidationError('cartMenuItems must be an array.');
+    cartMenuItems.forEach(validateMenuItem);
   }
 
-  if (offers) {
-    if (!Array.isArray(offers)) throw new ValidationError('offers must be an array.');
-    offers.forEach(validateOfferItem);
+  if (cartOffers) {
+    if (!Array.isArray(cartOffers)) throw new ValidationError('cartOffers must be an array.');
+    cartOffers.forEach(validateOfferItem);
   }
 
-  if (typeof loyaltyBalance !== 'number' || loyaltyBalance < 0) {
-    throw new ValidationError('loyaltyDiscount must be a non-negative number.');
+  // Default loyaltyBalance to 0 if not provided or invalid
+  if (loyaltyBalance !== undefined && (typeof loyaltyBalance !== 'number' || loyaltyBalance < 0)) {
+    throw new ValidationError('loyaltyBalance must be a non-negative number.');
   }
 
   if (deliveryFeesEgp !== undefined && (typeof deliveryFeesEgp !== 'number' || deliveryFeesEgp < 0)) {
