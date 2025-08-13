@@ -35,19 +35,15 @@ export function calculateVatDetails(
   data: VatInput
 ): VatOutPut {
 
-  // Prevent division by zero - if totalNetPrice is 0, avgVat should be 0
-  const avgVat = data.itemsNetPrice > 0 ? (data.itemsTotalPrice - data.itemsNetPrice) / data.itemsNetPrice : 0;
-  // Prevent negative net price after discounts
-  const totalNetPriceAfterDiscount = Math.max(data.itemsNetPrice - (data.appliedPromoCode ?? 0) - (data.appliedLoyalty ?? 0), 0);
-
-  const vatableFees = data.dineinExtraCharge || data.effectiveDeliveryFeesEgp || 0;
+  const vatableFees = (data.dineinExtraCharge ?? 0) + (data.effectiveDeliveryFeesEgp ?? 0);
   const vatOnCharges = vatableFees * 0.14;
-  const netPriceAfterDiscountVat = totalNetPriceAfterDiscount * avgVat;
+    const VatOnItems =
+  data.itemsNetPriceAfterDiscount > 0 ? data.itemsNetPriceAfterDiscount * 0.14 : 0;
+
 
   return {
-    avgVat,
     vatOnCharges,
-    netPriceAfterDiscountVat,
-    totalVat: netPriceAfterDiscountVat + vatOnCharges
+    netPriceAfterDiscountVat:VatOnItems,
+    totalVat: VatOnItems + vatOnCharges
   };
 }
