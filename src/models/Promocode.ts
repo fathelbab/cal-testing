@@ -54,5 +54,5 @@ export const appTypeMap = {
 export interface IapplyDiscountResults {
   appliedPromoCode:number;
   appliedLoyalty:number;
-  netAfterDiscounts:number;
+  itemsNetPriceAfterDiscount:number;
 }
