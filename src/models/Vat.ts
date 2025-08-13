@@ -1,5 +1,5 @@
 export interface VatInput {
-  itemsNetPrice: number,
+  itemsNetPriceAfterDiscount: number,
   itemsTotalPrice: number,
   dineinExtraCharge?: number,
   effectiveDeliveryFeesEgp?: number,
@@ -7,7 +7,6 @@ export interface VatInput {
   appliedLoyalty?: number
 }
 export interface VatOutPut {
-  avgVat: number,
   vatOnCharges: number,
   netPriceAfterDiscountVat: number,
   totalVat: number
