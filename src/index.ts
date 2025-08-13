@@ -3,16 +3,17 @@ import { deliveryType } from './models/CheckoutConfig';
 import { calcItemPrices, collectPricedCartItems } from './engines/items';
 import { applyDiscountsInOrder } from './engines/discount';
 import { calculateVatDetails } from './engines/vat';
-import { calculateFinalTotal } from './engines/final-total';
 import { validateCheckoutConfig } from './validation/validation';
 import { calculatePromocodeValue } from './engines/promocode';
 import { Item } from './models/Items';
 import { IPromocodeConfig } from './models/Promocode';
+import { calculateFinalTotal } from './engines/final-total';
+import { calculateSubTotalVat } from './engines/subTotalVat';
 
 export interface CheckoutResult {
   subtotal: number;
   subtotalWithVat: number;
-  totalVat: number; 
+  totalVat: number;
   promocodeDiscountAmount: number;
   loyaltyDiscountAmount: number;
   finalTotal: number;
@@ -30,10 +31,10 @@ export interface CheckoutConfig {
   appType: number;
 }
 
+const to2 = (n: number) => Number(n.toFixed(2));
 
 export function checkout(config: CheckoutConfig): CheckoutResult {
   validateCheckoutConfig(config);
-  let dineinExtraChargeWithVat = 0;
   const {
     cartMenuItems,
     cartOffers,
@@ -47,39 +48,31 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
 
   const menuItemsTotal = cartMenuItems ? calcItemPrices(cartMenuItems) : undefined;
   const offersTotal = cartOffers ? calcItemPrices(cartOffers) : undefined;
-  const allItemTotals = collectPricedCartItems(
-    menuItemsTotal,
-    offersTotal
-  );
+  const allItemTotals = collectPricedCartItems(menuItemsTotal, offersTotal);
 
   const { itemsNetPrice, itemsTotalPrice } = sumCart(allItemTotals);
 
-  const subtotalVat = itemsTotalPrice - itemsNetPrice;
+  const subtotalVat = calculateSubTotalVat(itemsTotalPrice, itemsNetPrice);
 
-  const promocodeValueEgp = calculatePromocodeValue(
-    coupon,
-    itemsNetPrice,
-    deliveryFeesEgp,
-    deliveryType,
-    appType
-  );
+  const isDeliveryFree = !!coupon?.data && coupon.data.discount_type === 'delivery_free';
+  const allowLoyalty = !(coupon?.data && !coupon.data.allow_loyalty);
+  let validLoyaltyDiscount = allowLoyalty ? loyaltyBalance : 0;
+  const effectiveDeliveryFeesEgp = isDeliveryFree ? 0 : deliveryFeesEgp;
 
-  let validLoyaltyDiscount = loyaltyBalance;
-  let effectiveDeliveryFeesEgp =0; 
-  if (coupon && coupon?.data && !coupon?.data.allow_loyalty) {
-    validLoyaltyDiscount = 0;
-  }
-  if (coupon && coupon?.data && coupon?.data?.discount_type === 'delivery_free') {
-    effectiveDeliveryFeesEgp = 0;
-  }else{
-    effectiveDeliveryFeesEgp = deliveryFeesEgp
-  }
+  const promocodeValueEgp = isDeliveryFree
+    ? 0
+    : calculatePromocodeValue(
+      coupon,
+      itemsNetPrice,
+      deliveryFeesEgp,
+      deliveryType,
+      appType
+    );
 
-
-  const { appliedPromoCode, appliedLoyalty } = applyDiscountsInOrder(itemsNetPrice, promocodeValueEgp, validLoyaltyDiscount);
+  const { appliedPromoCode, appliedLoyalty, itemsNetPriceAfterDiscount } = applyDiscountsInOrder(itemsNetPrice, promocodeValueEgp, validLoyaltyDiscount);
 
   const { totalVat } = calculateVatDetails({
-    itemsNetPrice,
+    itemsNetPriceAfterDiscount,
     itemsTotalPrice,
     dineinExtraCharge,
     effectiveDeliveryFeesEgp,
@@ -87,25 +80,17 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
     appliedLoyalty,
   }
   );
-  if (dineinExtraCharge && dineinExtraCharge > 0) {
-    dineinExtraChargeWithVat = dineinExtraCharge * 1.14;
-  }
-  const finalTotal = calculateFinalTotal({
-    itemsTotalPrice,
-    dineinExtraChargeWithVat,
-    effectiveDeliveryFeesEgp,
-    loyaltyDiscount: appliedPromoCode ?? 0,
-    promocodeDiscount: appliedLoyalty ?? 0
-  });
+  const finalTotal = calculateFinalTotal({ totalVat, itemsNetPriceAfterDiscount, dineinExtraCharge, deliveryFeesEgp: effectiveDeliveryFeesEgp })
+  const promoShown = isDeliveryFree ? deliveryFeesEgp : appliedPromoCode;
 
   return {
-    subtotal: Number(itemsNetPrice.toFixed(2)),
-    subtotalWithVat: Number(itemsTotalPrice.toFixed(2)),
-    loyaltyDiscountAmount: Number(appliedLoyalty.toFixed(2)),
-    promocodeDiscountAmount: Number(appliedPromoCode.toFixed(2)),
-    subtotalVat: Number(subtotalVat.toFixed(2)),
-    totalVat: Number(totalVat.toFixed(2)),
-    finalTotal: Number(finalTotal.toFixed(2)),
+    subtotal: to2(itemsNetPrice),
+    subtotalWithVat: to2(itemsTotalPrice),
+    loyaltyDiscountAmount: to2(appliedLoyalty),
+    promocodeDiscountAmount: to2(promoShown),
+    subtotalVat: to2(subtotalVat),
+    totalVat: to2(totalVat),
+    finalTotal: to2(finalTotal),
   };
 }
 
@@ -117,7 +102,6 @@ export * from './models/CartTotals';
 export * from './engines/items';
 export * from './engines/cart-totals';
 export * from './engines/discount';
-export * from './engines/final-total';
 export * from './engines/vat';
 export * from './engines/promocode';
 export * from './validation/validation';
