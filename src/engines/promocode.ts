@@ -5,7 +5,7 @@ import { IPromocodeConfig, appTypeMap } from '../models/Promocode';
  * and the current checkout context.
  *
  * @param {IPromocodeConfig | undefined} coupon - The promocode configuration object (or undefined if none is applied).
- * @param {number} totalNetPrice - The total net price of items in the cart (before VAT and fees).
+ * @param {number} itemsNetPrice - The total net price of items in the cart (before VAT and fees).
  * @param {number} deliveryFeesEgp - Delivery fees in EGP.
  * @param {string} deliveryType - The type of delivery ("DELIVERY", "PICKUP", "DINEIN", etc.).
  * @param {number} appType - Numeric code representing the app type (mapped in `appTypeMap`).
@@ -32,7 +32,7 @@ import { IPromocodeConfig, appTypeMap } from '../models/Promocode';
  */
 export function calculatePromocodeValue(
   coupon: IPromocodeConfig | undefined,
-  totalNetPrice: number,
+  itemsNetPrice: number,
   deliveryFeesEgp: number,
   deliveryType: string,
   appType: number
@@ -47,7 +47,7 @@ export function calculatePromocodeValue(
 
   const couponData = coupon.data;
 
-  const meetsMinBasket = totalNetPrice >= (couponData.min_basket || 0);
+  const meetsMinBasket = itemsNetPrice >= (couponData.min_basket || 0);
 
   const matchesDeliveryType =
     couponData.delivery_type === 'all' ||
@@ -65,7 +65,7 @@ export function calculatePromocodeValue(
 
   switch (couponData.discount_type) {
     case 'percentage':
-      return (totalNetPrice * couponData.discount_value) / 100;
+      return (itemsNetPrice * couponData.discount_value) / 100;
     case 'fixed':
     case 'absolute':
       return couponData.discount_value;
