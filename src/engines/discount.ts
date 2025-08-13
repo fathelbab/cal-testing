@@ -4,7 +4,7 @@ import { IapplyDiscountResults } from "../models/Promocode";
  * Applies discounts in a specific order: first the promocode discount, then the loyalty discount.
  * Ensures that neither discount exceeds the remaining total at its step.
  *
- * @param {number} totalNetPrice - The total net price before applying any discounts.
+ * @param {number} itemsNetPrice - The total net price of items before applying any discounts.
  * @param {number} [promoCodeDiscount=0] - The discount amount from a promocode (default is 0).
  * @param {number} [loyaltyDiscount=0] - The discount amount from loyalty points/balance (default is 0).
  *
@@ -32,17 +32,17 @@ import { IapplyDiscountResults } from "../models/Promocode";
  * console.log(result3);
  * // ➜ { appliedPromoCode: 30, appliedLoyalty: 70, netAfterDiscounts: 0 }
  */
-export function applyDiscountsInOrder(totalNetPrice: number, promoCodeDiscount: number = 0, loyaltyDiscount: number = 0):IapplyDiscountResults {
-    // Step 1: Apply promo code discount (cannot exceed totalNetPrice)
-    const appliedPromoCode = Math.min(promoCodeDiscount, totalNetPrice);
-    const afterPromoCode = totalNetPrice - appliedPromoCode;
+export function applyDiscountsInOrder(itemsNetPrice: number, promoCodeDiscount: number = 0, loyaltyDiscount: number = 0):IapplyDiscountResults {
+    // Step 1: Apply promo code discount (cannot exceed itemsNetPrice)
+    const appliedPromoCode = Math.min(promoCodeDiscount, itemsNetPrice);
+    const afterPromoCode = itemsNetPrice - appliedPromoCode;
     // Step 2: Apply loyalty discount (cannot exceed what's left)
     const appliedLoyalty = Math.min(loyaltyDiscount, afterPromoCode);
     const afterLoyalty = afterPromoCode - appliedLoyalty;
     return {
       appliedPromoCode,
       appliedLoyalty,
-      netAfterDiscounts: afterLoyalty
+      itemsNetPriceAfterDiscount: afterLoyalty
     };
   }
 
