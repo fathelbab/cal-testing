@@ -1,4 +1,4 @@
-import { VatInput, VatOutPut } from "../models/Vat";
+import { IVatInput, IVatOutPut } from "../models/Vat";
 
 /**
  * Calculates detailed VAT breakdown including:
@@ -32,8 +32,8 @@ import { VatInput, VatOutPut } from "../models/Vat";
 * // }
 */
 export function calculateVatDetails(
-  data: VatInput
-): VatOutPut {
+  data: IVatInput
+): IVatOutPut {
 
   const vatableFees = (data.dineinExtraCharge ?? 0) + (data.effectiveDeliveryFeesEgp ?? 0);
   const vatOnCharges = vatableFees * 0.14;
