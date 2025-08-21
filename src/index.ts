@@ -1,14 +1,12 @@
 import { sumCart } from './engines/cart-totals';
-import { deliveryType } from './models/CheckoutConfig';
 import { calcItemPrices, collectPricedCartItems } from './engines/items';
 import { applyDiscountsInOrder } from './engines/discount';
 import { calculateVatDetails } from './engines/vat';
-import { validateCheckoutConfig } from './validation/validation';
+import { validateICheckoutConfig } from './validation/validation';
 import { calculatePromocodeValue } from './engines/promocode';
-import { Item } from './models/Items';
-import { IPromocodeConfig } from './models/Promocode';
 import { calculateFinalTotal } from './engines/final-total';
 import { calculateSubTotalVat } from './engines/subTotalVat';
+import type { ICheckoutConfig } from './models/CheckoutConfig';
 
 export interface CheckoutResult {
   subtotal: number;
@@ -20,21 +18,12 @@ export interface CheckoutResult {
   subtotalVat: number;
 }
 
-export interface CheckoutConfig {
-  cartMenuItems?: Item[];
-  cartOffers?: Item[];
-  deliveryFeesEgp?: number;
-  loyaltyBalance?: number;
-  dineinExtraCharge?: number;
-  coupon?: IPromocodeConfig;
-  deliveryType: deliveryType;
-  appType: number;
-}
+
 
 const to2 = (n: number) => Number(n.toFixed(2));
 
-export function checkout(config: CheckoutConfig): CheckoutResult {
-  validateCheckoutConfig(config);
+export function checkout(config: ICheckoutConfig): CheckoutResult {
+  validateICheckoutConfig(config);
   const {
     cartMenuItems,
     cartOffers,
@@ -62,11 +51,11 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
   const promocodeValueEgp = isDeliveryFree
     ? 0
     : calculatePromocodeValue(
-      coupon,
+      coupon ?? null,
       itemsNetPrice,
       deliveryFeesEgp,
       deliveryType,
-      appType
+      appType ?? 10
     );
 
   const { appliedPromoCode, appliedLoyalty, itemsNetPriceAfterDiscount } = applyDiscountsInOrder(itemsNetPrice, promocodeValueEgp, validLoyaltyDiscount);
@@ -97,7 +86,6 @@ export function checkout(config: CheckoutConfig): CheckoutResult {
 
 // Re-export all types and functions for convenience
 export * from './models/CartItem';
-export * from './models/CheckoutConfig';
 export * from './models/CartTotals';
 export * from './engines/items';
 export * from './engines/cart-totals';
