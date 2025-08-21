@@ -1,8 +1,3 @@
-export interface PromocodeConfig {
-  fixed?: number;
-  percentage?: number;
-}
-
 export interface IPromocodeConfig {
   data: {
     allowedDiscountItemsArr: any[];
@@ -29,7 +24,7 @@ export interface IPromocodeConfig {
     allowed_offers: any[];
     allowed_branches: any[];
     limit_customer_previous_orders: boolean;
-    allowedAppTypeId: number;
+    allowedAppTypeId: appTypeId;
     excludes_offers: boolean;
     allow_loyalty: boolean;
   };
@@ -45,13 +40,15 @@ export interface IAllowedDiscountItem {
 }
 
 export const appTypeMap = {
-  1: 'mobile',
-  2: 'web',
-  3: 'kiosk',
-  10: 'all',
-} as const; 
+  mobile: 1,
+  web: 2,
+  kiosk: 3,
+  all : 10
+};
 
-export interface IapplyDiscountResults {
+export type appTypeId = 1 | 2 | 3 | 10;
+
+export interface IApplyDiscountResults {
   appliedPromoCode:number;
   appliedLoyalty:number;
   itemsNetPriceAfterDiscount:number;
