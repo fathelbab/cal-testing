@@ -1,4 +1,5 @@
-import { IPromocodeConfig, appTypeMap } from '../models/Promocode';
+import { DELIVERY_TYPES } from '../models/CheckoutConfig';
+import { IPromocodeConfig } from '../models/Promocode';
 
 /**
  * Calculates the discount value from a given promocode (coupon) based on its configuration
@@ -31,10 +32,10 @@ import { IPromocodeConfig, appTypeMap } from '../models/Promocode';
  * // output 20 (10% of 200)
  */
 export function calculatePromocodeValue(
-  coupon: IPromocodeConfig | undefined,
+  coupon: IPromocodeConfig | null,
   itemsNetPrice: number,
   deliveryFeesEgp: number,
-  deliveryType: string,
+  deliveryType: number,
   appType: number
 ): number {
   const now = Date.now();
@@ -50,15 +51,15 @@ export function calculatePromocodeValue(
   const meetsMinBasket = itemsNetPrice >= (couponData.min_basket || 0);
 
   const matchesDeliveryType =
-    couponData.delivery_type === 'all' ||
-    (couponData.delivery_type === 'delivery_only' && deliveryType === 'DELIVERY') ||
-    (couponData.delivery_type === 'pickup_only' && deliveryType === 'PICKUP') ||
-    (couponData.delivery_type === 'dinein_only' && deliveryType === 'DINEIN');
+  couponData.delivery_type === 'all' ||
+  (couponData.delivery_type === 'delivery_only' && deliveryType === DELIVERY_TYPES.DELIVERY) ||
+  (couponData.delivery_type === 'pickup_only' && deliveryType === DELIVERY_TYPES.PICKUP) ||
+  (couponData.delivery_type === 'dinein_only' && deliveryType === DELIVERY_TYPES.DINEIN);
+
 
   let matchesAppType = true;
   if (appType && couponData.allowedAppTypeId) {
-    const allowedAppTypeKey = couponData.allowedAppTypeId as unknown as keyof typeof appTypeMap;
-    matchesAppType = appTypeMap[allowedAppTypeKey] === appTypeMap[appType as keyof typeof appTypeMap];
+    matchesAppType = appType === couponData.allowedAppTypeId;
   }
 
   if (!meetsMinBasket || !matchesDeliveryType || !matchesAppType) return 0;
