@@ -1,5 +1,5 @@
-import { CheckoutConfig } from '../models/CheckoutConfig';
-import { IItem } from '../models/CartItem';
+import { ICheckoutConfig } from '../models/CheckoutConfig';
+import { ICartItem } from '../models/CartItem';
 
 export class ValidationError extends Error {
   constructor(message: string) {
@@ -8,7 +8,7 @@ export class ValidationError extends Error {
   }
 }
 
-function validateMenuItem(item: IItem, index: number): void {
+function validateMenuItem(item: ICartItem, index: number): void {
   if (!item || typeof item !== 'object') {
     throw new ValidationError(`menuItems[${index}] must be a valid object.`);
   }
@@ -23,7 +23,7 @@ function validateMenuItem(item: IItem, index: number): void {
   }
 }
 
-function validateOfferItem(offer: IItem, index: number): void {
+function validateOfferItem(offer: ICartItem, index: number): void {
   if (!offer || typeof offer !== 'object') {
     throw new ValidationError(`offers[${index}] must be a valid object.`);
   }
@@ -38,7 +38,7 @@ function validateOfferItem(offer: IItem, index: number): void {
   }
 }
 
-export function validateCheckoutConfig(config: CheckoutConfig): void {
+export function validateICheckoutConfig(config: ICheckoutConfig): void {
   if (!config) throw new ValidationError('Checkout config is required.');
 
   const {
@@ -47,6 +47,9 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     deliveryFeesEgp,
     loyaltyBalance,
     dineinExtraCharge,
+    deliveryType,
+    appType,
+    coupon
   } = config;
 
   if (!Array.isArray(cartMenuItems) && !Array.isArray(cartOffers)) {
@@ -68,20 +71,36 @@ export function validateCheckoutConfig(config: CheckoutConfig): void {
     throw new ValidationError('loyaltyBalance must be a non-negative number.');
   }
 
+
+
+  if (![1, 2, 3].includes(deliveryType)) {
+    throw new ValidationError('deliveryType must be a valid ID (1 = DELIVERY, 2 = PICKUP, 3 = DINEIN).');
+  }
+
+
+
   if (deliveryFeesEgp !== undefined && (typeof deliveryFeesEgp !== 'number' || deliveryFeesEgp < 0)) {
     throw new ValidationError('deliveryFeesEgp must be a non-negative number.');
   }
 
 
 
-  if (dineinExtraCharge !== undefined && (typeof dineinExtraCharge !== 'number' || dineinExtraCharge < 0 )) {
+  if (dineinExtraCharge !== undefined && (typeof dineinExtraCharge !== 'number' || dineinExtraCharge < 0)) {
     throw new ValidationError('dineinExtraCharge must be a non-negative number.');
   }
-const hasDinein = (dineinExtraCharge ?? 0) > 0;
-const hasDelivery = (deliveryFeesEgp ?? 0) > 0;
+  const hasDinein = (dineinExtraCharge ?? 0) > 0;
+  const hasDelivery = (deliveryFeesEgp ?? 0) > 0;
 
-if (hasDinein && hasDelivery) {
-  throw new ValidationError('Cannot have both dine-in charge and delivery fees in the same order.');
-}
+  if (hasDinein && hasDelivery) {
+    throw new ValidationError('Cannot have both dine-in charge and delivery fees in the same order.');
+  }
+  if (appType !== undefined && ![1, 2, 3, 10].includes(appType)) {
+    throw new ValidationError('appType must be one of: 1 (mobile), 2 (web), 3 (kiosk), 10 (all).');
+  }
 
+  if (coupon !== null) {
+    if (typeof coupon !== 'object' || typeof coupon.valid !== 'boolean' || typeof coupon.data !== 'object' || coupon.data === null) {
+      throw new ValidationError('coupon must be a valid IPromocodeConfig object.');
+    }
+  }
 }
