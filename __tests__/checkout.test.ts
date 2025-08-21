@@ -1,12 +1,15 @@
-import { checkout, CheckoutConfig, deliveryType, IItem } from '../src/index';
+import { checkout, ICartItem } from '../src/index';
+import { DELIVERY_TYPES, DeliveryTypeId, ICheckoutConfig } from '../src/models/CheckoutConfig';
 
 describe('checkout (unit tests, all cases)', () => {
 
   it('returns zero totals for an empty cart', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [],
-      cartOffers: []
-    } as any;
+      deliveryType: DELIVERY_TYPES.DINEIN as DeliveryTypeId,
+      cartOffers: [],
+      coupon: null
+    };
 
     const result = checkout(config);
     expect(result.subtotal).toBe(0);
@@ -19,13 +22,15 @@ describe('checkout (unit tests, all cases)', () => {
   });
 
   it('defaults loyaltyBalance to 0 when not provided', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 114 },
       ],
       cartOffers: [],
+      coupon: null,
       // loyaltyBalance not provided 
-    } as any;
+      deliveryType: DELIVERY_TYPES.PICKUP as DeliveryTypeId
+    };
 
     const result = checkout(config);
     expect(result.subtotal).toBe(100);
@@ -36,13 +41,15 @@ describe('checkout (unit tests, all cases)', () => {
   });
 
   it('calculates totals for only menu items', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 1, requiredNetPrice: 83.33, requiredTotalPrice: 95 },
       ],
       cartOffers: [],
       loyaltyBalance: 0,
-    } as any;
+      deliveryType: DELIVERY_TYPES.PICKUP as DeliveryTypeId,
+      coupon: null
+    };
 
     const result = checkout(config);
 
@@ -56,14 +63,15 @@ describe('checkout (unit tests, all cases)', () => {
   });
 
   it('calculates totals for only cartOffers', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [],
       cartOffers: [
         { quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 105 },
-      ] as IItem[],
+      ] as ICartItem[],
       dineinExtraCharge: 30,
       loyaltyBalance: 0,
-      deliveryType: deliveryType.DINEIN,
+      deliveryType: DELIVERY_TYPES.DINEIN as DeliveryTypeId,
+      coupon:null,
       appType: 1,
     };
 
@@ -80,17 +88,18 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('calculates totals for both menu items and cartOffers', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 2, requiredNetPrice: 100, requiredTotalPrice: 114 }
-      ] as IItem[],
+      ] as ICartItem[],
       cartOffers: [
         { quantity: 1, requiredNetPrice: 50, requiredTotalPrice: 57 }
-      ] as IItem[],
+      ] as ICartItem[],
       loyaltyBalance: 0,
       deliveryFeesEgp: 10,
-      deliveryType: deliveryType.DELIVERY,
-      appType: 1
+      deliveryType: DELIVERY_TYPES.DELIVERY as DeliveryTypeId,
+      appType: 1,
+      coupon:null
     };
 
     const result = checkout(config);
@@ -105,14 +114,14 @@ describe('checkout (unit tests, all cases)', () => {
   });
 
   it('throws if both dine-in and delivery are present', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 114 }
-      ] as IItem[],
+      ] as ICartItem[],
       dineinExtraCharge: 131.67,
       deliveryFeesEgp: 8,
       loyaltyBalance: 0,
-      deliveryType: deliveryType.DELIVERY,
+      deliveryType: DELIVERY_TYPES.DELIVERY as DeliveryTypeId,
       appType: 1
     };
 
@@ -123,14 +132,15 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('applies only loyalty discount correctly - pickup', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 2, requiredNetPrice: 50, requiredTotalPrice: 57 },
-      ] as IItem[],
+      ] as ICartItem[],
       cartOffers: [],
       loyaltyBalance: 20,
-      deliveryType: deliveryType.PICKUP,
-      appType: 1
+      deliveryType: DELIVERY_TYPES.PICKUP as DeliveryTypeId,
+      appType: 1,
+      coupon:null
     };
 
     const result = checkout(config);
@@ -149,10 +159,10 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('applies only promo code discount correctly', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 1, requiredNetPrice: 120, requiredTotalPrice: 136.8 }
-      ] as IItem[],
+      ] as ICartItem[],
       cartOffers: [],
       coupon: {
         valid: true,
@@ -172,7 +182,7 @@ describe('checkout (unit tests, all cases)', () => {
         },
       },
       loyaltyBalance: 0,
-      deliveryType: deliveryType.PICKUP,
+      deliveryType: DELIVERY_TYPES.PICKUP as DeliveryTypeId,
       appType: 1
     };
 
@@ -189,10 +199,10 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('applies both discounts + dine-in charge', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 1, requiredNetPrice: 200, requiredTotalPrice: 228 },
-      ] as IItem[],
+      ] as ICartItem[],
       cartOffers: [],
       coupon: {
         valid: true,
@@ -213,7 +223,7 @@ describe('checkout (unit tests, all cases)', () => {
       },
       dineinExtraCharge: 131.67,
       loyaltyBalance: 30,
-      deliveryType: deliveryType.DINEIN,
+      deliveryType: DELIVERY_TYPES.DINEIN as DeliveryTypeId,
       appType: 1,
     };
 
@@ -233,10 +243,10 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('handles large discounts that zero out the order dine-in fees', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 1, requiredNetPrice: 40, requiredTotalPrice: 45 },
-      ] as IItem[],
+      ] as ICartItem[],
       cartOffers: [],
       coupon: {
         valid: true,
@@ -257,7 +267,7 @@ describe('checkout (unit tests, all cases)', () => {
       },
       loyaltyBalance: 25,
       dineinExtraCharge: 10,
-      deliveryType: deliveryType.DINEIN,
+      deliveryType: DELIVERY_TYPES.DINEIN as DeliveryTypeId,
       appType: 1
     };
 
@@ -277,15 +287,16 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('uses delivery fee instead of dine-in', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [
         { quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 114 },
-      ] as IItem[],
+      ] as ICartItem[],
       cartOffers: [],
       deliveryFeesEgp: 10,
       loyaltyBalance: 0,
-      deliveryType: deliveryType.DELIVERY,
-      appType: 1
+      deliveryType: DELIVERY_TYPES.DELIVERY as DeliveryTypeId,
+      appType: 1,
+      coupon:null
     };
 
     const result = checkout(config);
@@ -297,7 +308,7 @@ describe('checkout (unit tests, all cases)', () => {
   });
 
   it('ignores expired coupon', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       loyaltyBalance: 0,
       cartMenuItems: [{ quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 114 }],
       coupon: {
@@ -318,8 +329,8 @@ describe('checkout (unit tests, all cases)', () => {
         },
       },
       appType: 1,
-      deliveryType: 'DELIVERY',
-    } as any;
+      deliveryType: DELIVERY_TYPES.DELIVERY as DeliveryTypeId
+    };
 
     const result = checkout(config);
     expect(result.promocodeDiscountAmount).toBe(0);
@@ -327,7 +338,7 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('applies free delivery discount as promo', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       loyaltyBalance: 2,
       cartMenuItems: [{ quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 114 }],
       deliveryFeesEgp: 20,
@@ -349,8 +360,8 @@ describe('checkout (unit tests, all cases)', () => {
         },
       },
       appType: 1,
-      deliveryType: 'DELIVERY',
-    } as any;
+      deliveryType: DELIVERY_TYPES.DELIVERY as DeliveryTypeId
+    };
     const result = checkout(config);
     expect(result.subtotal).toBe(100);
     expect(result.subtotalWithVat).toBe(114);
@@ -364,7 +375,7 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('ignores loyalty discount if coupon disallows it', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [{ quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 114 }],
       loyaltyBalance: 30,
       coupon: {
@@ -385,8 +396,8 @@ describe('checkout (unit tests, all cases)', () => {
         },
       },
       appType: 1,
-      deliveryType: 'PICKUP',
-    } as any;
+      deliveryType: DELIVERY_TYPES.PICKUP as DeliveryTypeId
+    };
 
     const result = checkout(config);
     expect(result.loyaltyDiscountAmount).toBe(0);
@@ -400,7 +411,7 @@ describe('checkout (unit tests, all cases)', () => {
 
 
   it('ignores coupon if basket is below min_basket', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       loyaltyBalance: 0,
       cartMenuItems: [{ quantity: 1, requiredNetPrice: 40, requiredTotalPrice: 45.6 }],
       coupon: {
@@ -421,7 +432,7 @@ describe('checkout (unit tests, all cases)', () => {
         },
       },
       appType: 1,
-      deliveryType: 'DELIVERY',
+      deliveryType: DELIVERY_TYPES.DELIVERY as DeliveryTypeId
     } as any;
 
     const result = checkout(config);
@@ -429,23 +440,23 @@ describe('checkout (unit tests, all cases)', () => {
   });
 
   it('throws error for negative loyaltyBalance', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [{ quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 114 }],
       loyaltyBalance: -10,
       appType: 1,
-      deliveryType: 'PICKUP',
-    } as any;
+      deliveryType: DELIVERY_TYPES.PICKUP as DeliveryTypeId
+    };
 
     expect(() => checkout(config)).toThrow('loyaltyBalance must be a non-negative number.');
   });
 
   it('throws error for invalid loyaltyBalance type', () => {
-    const config: CheckoutConfig = {
+    const config: ICheckoutConfig = {
       cartMenuItems: [{ quantity: 1, requiredNetPrice: 100, requiredTotalPrice: 114 }],
       loyaltyBalance: 'invalid' as any,
       appType: 1,
-      deliveryType: 'PICKUP',
-    } as any;
+      deliveryType: DELIVERY_TYPES.PICKUP as DeliveryTypeId
+    };
 
     expect(() => checkout(config)).toThrow('loyaltyBalance must be a non-negative number.');
   });
