@@ -1,4 +1,4 @@
-export interface FinalTotalInput {
+export interface IFinalTotalInput {
   totalVat:number,
   itemsNetPriceAfterDiscount:number,
   dineinExtraCharge:number,
