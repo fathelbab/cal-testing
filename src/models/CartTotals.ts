@@ -1,9 +1,9 @@
-export interface CartTotalsResults {
+export interface ICartTotalsResults {
   itemsNetPrice: number;
   itemsTotalPrice: number;
 }
 
-export interface Isumcart {
+export interface ISumcart {
   netPrice: number;
   totalPrice: number;
 } 
