@@ -1,4 +1,4 @@
-import { IapplyDiscountResults } from "../models/Promocode";
+import { IApplyDiscountResults } from "../models/Promocode";
 
 /**
  * Applies discounts in a specific order: first the promocode discount, then the loyalty discount.
@@ -32,7 +32,7 @@ import { IapplyDiscountResults } from "../models/Promocode";
  * console.log(result3);
  * // ➜ { appliedPromoCode: 30, appliedLoyalty: 70, netAfterDiscounts: 0 }
  */
-export function applyDiscountsInOrder(itemsNetPrice: number, promoCodeDiscount: number = 0, loyaltyDiscount: number = 0):IapplyDiscountResults {
+export function applyDiscountsInOrder(itemsNetPrice: number, promoCodeDiscount: number = 0, loyaltyDiscount: number = 0):IApplyDiscountResults {
     // Step 1: Apply promo code discount (cannot exceed itemsNetPrice)
     const appliedPromoCode = Math.min(promoCodeDiscount, itemsNetPrice);
     const afterPromoCode = itemsNetPrice - appliedPromoCode;
