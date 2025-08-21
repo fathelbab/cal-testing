@@ -1,9 +1,10 @@
-import { Item, PricedCartItem } from '../models/Items';
+import { ICartItem } from '../models/CartItem';
+import { IPricedCartItem } from '../models/PricedCartItem';
 /**
  * Calculates the total net price and total price for a list of cart items.
  *
- * @param {Item[]} items - Array of cart items, each with `requiredNetPrice`, `requiredTotalPrice`, and `quantity`.
- * @returns {PricedCartItem} Object containing:
+ * @param {ICartItem[]} items - Array of cart items, each with `requiredNetPrice`, `requiredTotalPrice`, and `quantity`.
+ * @returns {IPricedCartItem} Object containing:
  *  - `netPrice`: Sum of (requiredNetPrice × quantity) for all items
  *  - `totalPrice`: Sum of (requiredTotalPrice × quantity) for all items
  *
@@ -14,7 +15,7 @@ import { Item, PricedCartItem } from '../models/Items';
  * ]);
  * // output: { netPrice: 25, totalPrice: 30 }
  */
-export function calcItemPrices(items: Item[]): PricedCartItem {
+export function calcItemPrices(items: ICartItem[]): IPricedCartItem {
   return (items || []).reduce(
     (acc, e) => {
       acc.netPrice += e.requiredNetPrice * e.quantity;
@@ -40,8 +41,8 @@ export function calcItemPrices(items: Item[]): PricedCartItem {
  * // output: [{ netPrice: 20, totalPrice: 25 }]
  */
 export function collectPricedCartItems(
-  pricedItems?: PricedCartItem,
-  pricedOffers?: PricedCartItem
-): PricedCartItem[] {
-  return [pricedItems, pricedOffers].filter((x): x is PricedCartItem => x !== undefined);
+  pricedItems?: IPricedCartItem,
+  pricedOffers?: IPricedCartItem
+): IPricedCartItem[] {
+  return [pricedItems, pricedOffers].filter((x): x is IPricedCartItem => x !== undefined);
 }
