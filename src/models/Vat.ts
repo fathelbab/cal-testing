@@ -1,4 +1,4 @@
-export interface VatInput {
+export interface IVatInput {
   itemsNetPriceAfterDiscount: number,
   itemsTotalPrice: number,
   dineinExtraCharge?: number,
@@ -6,7 +6,7 @@ export interface VatInput {
   appliedPromoCode?: number,
   appliedLoyalty?: number
 }
-export interface VatOutPut {
+export interface IVatOutPut {
   vatOnCharges: number,
   netPriceAfterDiscountVat: number,
   totalVat: number
