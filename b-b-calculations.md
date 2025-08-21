@@ -54,22 +54,22 @@ console.log(result);
 
 ### Main Function
 
-#### `checkout(config: CheckoutConfig): CheckoutResult`
+#### `checkout(config: ICheckoutConfig): CheckoutResult`
 
 The main function that processes a checkout configuration and returns calculation results.
 
 **Parameters:**
-- `config` (CheckoutConfig): The checkout configuration object
+- `config` (ICheckoutConfig): The checkout configuration object
 
 **Returns:**
 - `CheckoutResult`: Object containing all calculation results
 
 ### Types
 
-#### CheckoutConfig
+#### ICheckoutConfig
 
 ```typescript
-interface CheckoutConfig {
+interface ICheckoutConfig {
   cartMenuItems?: Item[];          // Array of menu items
   cartOffers?: Item[];             // Array of offer items
   deliveryFeesEgp?: number;        // Delivery fees (optional)
