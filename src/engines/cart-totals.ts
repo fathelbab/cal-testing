@@ -1,4 +1,4 @@
-import { CartTotalsResults, Isumcart } from '../models/CartTotals';
+import { ICartTotalsResults, ISumcart } from '../models/CartTotals';
 /**
  * Calculates the sum of net prices and total prices for a list of cart items.
  *
@@ -6,7 +6,7 @@ import { CartTotalsResults, Isumcart } from '../models/CartTotals';
  *   - `netPrice`: Net price for the item
  *   - `totalPrice`: Total price for the item including VAT
  *
- * @returns {CartTotalsResults} Object containing:
+ * @returns {ICartTotalsResults} Object containing:
  *   - `itemsNetPrice`: Sum of all net prices
  *   - `itemsTotalPrice`: Sum of all total prices
  *
@@ -20,7 +20,7 @@ import { CartTotalsResults, Isumcart } from '../models/CartTotals';
  * console.log(totals);
  * // output { itemsTotalPrice: 171, itemsNetPrice: 150 }
  */
-export function sumCart(items:Isumcart[]): CartTotalsResults {
+export function sumCart(items:ISumcart[]): ICartTotalsResults {
   return items.reduce(
     (sum, i) => ({
       itemsTotalPrice: sum.itemsTotalPrice + i.totalPrice ,
