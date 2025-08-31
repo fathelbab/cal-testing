@@ -9,13 +9,13 @@ import { IPricedCartItem } from '../models/PricedCartItem';
  *  - `totalPrice`: Sum of (requiredTotalPrice × quantity) for all items
  *
  * @example
- * calcItemPrices([
+ * calculateItemPrices([
  *   { requiredNetPrice: 10, requiredTotalPrice: 12, quantity: 2 },
  *   { requiredNetPrice: 5, requiredTotalPrice: 6, quantity: 1 }
  * ]);
  * // output: { netPrice: 25, totalPrice: 30 }
  */
-export function calcItemPrices(items: ICartItem[]): IPricedCartItem {
+export function calculateItemPrices(items: ICartItem[]): IPricedCartItem {
   return (items || []).reduce(
     (acc, e) => {
       acc.netPrice += e.requiredNetPrice * e.quantity;
@@ -34,13 +34,13 @@ export function calcItemPrices(items: ICartItem[]): IPricedCartItem {
  * @returns {PricedCartItem[]} Array containing all defined priced items/offers.
  *
  * @example
- * collectPricedCartItems(
+ * mergePricedCartItems(
  *   { netPrice: 20, totalPrice: 25 },
  *   undefined
  * );
  * // output: [{ netPrice: 20, totalPrice: 25 }]
  */
-export function collectPricedCartItems(
+export function mergePricedCartItems(
   pricedItems?: IPricedCartItem,
   pricedOffers?: IPricedCartItem
 ): IPricedCartItem[] {
