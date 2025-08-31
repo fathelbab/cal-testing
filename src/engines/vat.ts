@@ -22,7 +22,7 @@ import { IVatInput, IVatOutPut } from "../models/Vat";
 * }} An object containing VAT breakdown.
 *
 * @example
-* const vatDetails = calculateVatDetails(100, 114, 10, 0, 5, 0);
+* const vatDetails = calculateVatBreakdown(100, 114, 10, 0, 5, 0);
 * console.log(vatDetails);
 * // ➜ {
 * //   avgVat: 0.14,
@@ -31,7 +31,7 @@ import { IVatInput, IVatOutPut } from "../models/Vat";
 * //   totalVat: 14.7
 * // }
 */
-export function calculateVatDetails(
+export function calculateVatBreakdown(
   data: IVatInput
 ): IVatOutPut {
 
