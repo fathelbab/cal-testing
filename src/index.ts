@@ -1,7 +1,7 @@
-import { sumCart } from './engines/cart-totals';
-import { calcItemPrices, collectPricedCartItems } from './engines/items';
-import { applyDiscountsInOrder } from './engines/discount';
-import { calculateVatDetails } from './engines/vat';
+import { calculateCartTotals } from './engines/cart-totals';
+import { calculateItemPrices, mergePricedCartItems } from './engines/items';
+import { applySequentialDiscounts } from './engines/discount';
+import { calculateVatBreakdown } from './engines/vat';
 import { validateICheckoutConfig } from './validation/validation';
 import { calculatePromocodeValue } from './engines/promocode';
 import { calculateFinalTotal } from './engines/final-total';
@@ -35,11 +35,11 @@ export function checkout(config: ICheckoutConfig): CheckoutResult {
     appType
   } = config;
 
-  const menuItemsTotal = cartMenuItems ? calcItemPrices(cartMenuItems) : undefined;
-  const offersTotal = cartOffers ? calcItemPrices(cartOffers) : undefined;
-  const allItemTotals = collectPricedCartItems(menuItemsTotal, offersTotal);
+  const menuItemsTotal = cartMenuItems ? calculateItemPrices(cartMenuItems) : undefined;
+  const offersTotal = cartOffers ? calculateItemPrices(cartOffers) : undefined;
+  const allItemTotals = mergePricedCartItems(menuItemsTotal, offersTotal);
 
-  const { itemsNetPrice, itemsTotalPrice } = sumCart(allItemTotals);
+  const { itemsNetPrice, itemsTotalPrice } = calculateCartTotals(allItemTotals);
 
   const subtotalVat = calculateSubTotalVat(itemsTotalPrice, itemsNetPrice);
 
@@ -58,9 +58,9 @@ export function checkout(config: ICheckoutConfig): CheckoutResult {
       appType ?? 10
     );
 
-  const { appliedPromoCode, appliedLoyalty, itemsNetPriceAfterDiscount } = applyDiscountsInOrder(itemsNetPrice, promocodeValueEgp, validLoyaltyDiscount);
+  const { appliedPromoCode, appliedLoyalty, itemsNetPriceAfterDiscount } = applySequentialDiscounts(itemsNetPrice, promocodeValueEgp, validLoyaltyDiscount);
 
-  const { totalVat } = calculateVatDetails({
+  const { totalVat } = calculateVatBreakdown({
     itemsNetPriceAfterDiscount,
     itemsTotalPrice,
     dineinExtraCharge,
