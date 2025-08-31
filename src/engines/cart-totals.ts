@@ -20,7 +20,7 @@ import { ICartTotalsResults, ISumcart } from '../models/CartTotals';
  * console.log(totals);
  * // output { itemsTotalPrice: 171, itemsNetPrice: 150 }
  */
-export function sumCart(items:ISumcart[]): ICartTotalsResults {
+export function calculateCartTotals(items:ISumcart[]): ICartTotalsResults {
   return items.reduce(
     (sum, i) => ({
       itemsTotalPrice: sum.itemsTotalPrice + i.totalPrice ,
