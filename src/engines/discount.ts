@@ -16,23 +16,23 @@ import { IApplyDiscountResults } from "../models/Promocode";
  *
  * @example
  * // Example 1: Both discounts fully applicable
- * const result1 = applyDiscountsInOrder(200, 50, 30);
+ * const result1 = applySequentialDiscounts(200, 50, 30);
  * console.log(result1);
  * // ➜ { appliedPromoCode: 50, appliedLoyalty: 30, netAfterDiscounts: 120 }
  *
  * @example
  * // Example 2: Promocode discount exceeds totalNetPrice
- * const result2 = applyDiscountsInOrder(100, 150, 50);
+ * const result2 = applySequentialDiscounts(100, 150, 50);
  * console.log(result2);
  * // ➜ { appliedPromoCode: 100, appliedLoyalty: 0, netAfterDiscounts: 0 }
  *
  * @example
  * // Example 3: Loyalty discount exceeds remaining after promo
- * const result3 = applyDiscountsInOrder(100, 30, 80);
+ * const result3 = applySequentialDiscounts(100, 30, 80);
  * console.log(result3);
  * // ➜ { appliedPromoCode: 30, appliedLoyalty: 70, netAfterDiscounts: 0 }
  */
-export function applyDiscountsInOrder(itemsNetPrice: number, promoCodeDiscount: number = 0, loyaltyDiscount: number = 0):IApplyDiscountResults {
+export function applySequentialDiscounts(itemsNetPrice: number, promoCodeDiscount: number = 0, loyaltyDiscount: number = 0):IApplyDiscountResults {
     // Step 1: Apply promo code discount (cannot exceed itemsNetPrice)
     const appliedPromoCode = Math.min(promoCodeDiscount, itemsNetPrice);
     const afterPromoCode = itemsNetPrice - appliedPromoCode;
