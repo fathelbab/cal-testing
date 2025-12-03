@@ -1,17 +1,31 @@
-import { PricedCartItem } from './items';
-import { PricedOfferItem } from './offers';
-
-export interface CartTotals {
-  totalNet: number;
-  totalPrice: number;
-}
-
-export function sumCart(items: (PricedCartItem | PricedOfferItem)[]): CartTotals {
+import { ICartTotalsResults, ISumcart } from '../models/CartTotals';
+/**
+ * Calculates the sum of net prices and total prices for a list of cart items.
+ *
+ * @param {Isumcart[]} items - Array of items, each containing:
+ *   - `netPrice`: Net price for the item
+ *   - `totalPrice`: Total price for the item including VAT
+ *
+ * @returns {ICartTotalsResults} Object containing:
+ *   - `itemsNetPrice`: Sum of all net prices
+ *   - `itemsTotalPrice`: Sum of all total prices
+ *
+ * @example
+ * const cartItems = [
+ *   { netPrice: 100, totalPrice: 114 },
+ *   { netPrice: 50, totalPrice: 57 }
+ * ];
+ *
+ * const totals = sumCart(cartItems);
+ * console.log(totals);
+ * // output { itemsTotalPrice: 171, itemsNetPrice: 150 }
+ */
+export function calculateCartTotals(items:ISumcart[]): ICartTotalsResults {
   return items.reduce(
     (sum, i) => ({
-      totalNet: sum.totalNet + i.netPrice * i.quantity,
-      totalPrice: sum.totalPrice + i.cartPrice * i.quantity,
+      itemsTotalPrice: sum.itemsTotalPrice + i.totalPrice ,
+      itemsNetPrice: sum.itemsNetPrice + i.netPrice ,
     }),
-    { totalNet: 0, totalPrice: 0 }
+    { itemsTotalPrice: 0, itemsNetPrice: 0 }
   );
 } 

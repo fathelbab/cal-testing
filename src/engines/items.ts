@@ -1,34 +1,48 @@
-import { CartItem } from '../models/CartItem';
-
-export interface PricedCartItem extends CartItem {
-  netPrice: number;
-  cartPrice: number;
-}
-
-export function calcItemPrices(item: CartItem): PricedCartItem {
-  const extras = (item.extras || []).reduce(
+import { ICartItem } from '../models/CartItem';
+import { IPricedCartItem } from '../models/PricedCartItem';
+/**
+ * Calculates the total net price and total price for a list of cart items.
+ *
+ * @param {ICartItem[]} items - Array of cart items, each with `requiredNetPrice`, `requiredTotalPrice`, and `quantity`.
+ * @returns {IPricedCartItem} Object containing:
+ *  - `netPrice`: Sum of (requiredNetPrice × quantity) for all items
+ *  - `totalPrice`: Sum of (requiredTotalPrice × quantity) for all items
+ *
+ * @example
+ * calculateItemPrices([
+ *   { requiredNetPrice: 10, requiredTotalPrice: 12, quantity: 2 },
+ *   { requiredNetPrice: 5, requiredTotalPrice: 6, quantity: 1 }
+ * ]);
+ * // output: { netPrice: 25, totalPrice: 30 }
+ */
+export function calculateItemPrices(items: ICartItem[]): IPricedCartItem {
+  return (items || []).reduce(
     (acc, e) => {
-      acc.net += e.fullData.net_price;
-      acc.total += e.fullData.total_price;
+      acc.netPrice += e.requiredNetPrice * e.quantity;
+      acc.totalPrice += e.requiredTotalPrice * e.quantity;
       return acc;
     },
-    { net: 0, total: 0 }
+    { netPrice: 0, totalPrice: 0 }
   );
-
-  const replacements = (item.replacements || []).reduce(
-    (acc, r) => {
-      acc.net += r.fullData.net_price;
-      acc.total += r.fullData.total_price;
-      return acc;
-    },
-    { net: 0, total: 0 }
-  );
-
-  const sizeData = item.size?.fullData || { net_price: 0, total_price: 0 };
-  const comboData = item.comboOption?.fullData || { net_price: 0, total_price: 0 };
-
-  const netPrice = extras.net + replacements.net + sizeData.net_price + comboData.net_price;
-  const cartPrice = extras.total + replacements.total + sizeData.total_price + comboData.total_price;
-
-  return { ...item, netPrice, cartPrice };
 } 
+
+/**
+ * Combines priced items and priced offers into a single array, ignoring undefined values.
+ *
+ * @param {PricedCartItem} [pricedItems] - Calculated prices for regular cart items.
+ * @param {PricedCartItem} [pricedOffers] - Calculated prices for offers.
+ * @returns {PricedCartItem[]} Array containing all defined priced items/offers.
+ *
+ * @example
+ * mergePricedCartItems(
+ *   { netPrice: 20, totalPrice: 25 },
+ *   undefined
+ * );
+ * // output: [{ netPrice: 20, totalPrice: 25 }]
+ */
+export function mergePricedCartItems(
+  pricedItems?: IPricedCartItem,
+  pricedOffers?: IPricedCartItem
+): IPricedCartItem[] {
+  return [pricedItems, pricedOffers].filter((x): x is IPricedCartItem => x !== undefined);
+}

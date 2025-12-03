@@ -1,32 +1,22 @@
-import { CartItem } from './CartItem';
-import { OfferItem } from './OfferItem';
+import { ICartItem } from './CartItem';
+import { IPromocodeConfig } from './Promocode';
 
-export interface UserPointsInfo {
-  points: number;
-  pendingPoints: number;
-  pointsValue: number;
-  pendingPointsValue: number;
-}
 
-export interface CheckoutConfig {
-  menuItems: CartItem[];
-  offers: OfferItem[];
-  deliveryType: 1 | 2 | 3;
-  branchConfig: {
-    branch_delivery_charge?: number;
-    streets_delivery_time?: boolean;
-    delivery_time?: number;
-  };
-  addressConfig?: {
-    street: {
-      delivery_charge: number;
-      delivery_time: number;
-    };
-  };
-  promocodeFixed?: number;
-  promocodePercentage?: number;
-  deliveryPromocode?: boolean;
-  dineinFixed?: number;
-  dineinPercentage?: number;
-  userPointsInfo?: UserPointsInfo;
+export const DELIVERY_TYPES = {
+  DELIVERY: 1,
+  PICKUP: 2,
+  DINEIN: 3,
+};
+
+export type DeliveryTypeId = 1 | 2 | 3;
+
+export interface ICheckoutConfig {
+  cartMenuItems?: ICartItem[];
+  cartOffers?: ICartItem[];
+  deliveryFeesEgp?: number;
+  loyaltyBalance?: number;
+  dineinExtraCharge?: number;
+  coupon?: IPromocodeConfig | null ;
+  deliveryType: DeliveryTypeId;
+  appType?: number;
 } 

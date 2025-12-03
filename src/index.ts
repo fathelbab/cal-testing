@@ -1,85 +1,95 @@
-import { calcItemPrices, PricedCartItem } from './engines/items';
-import { calcOfferPrices, PricedOfferItem } from './engines/offers';
-import { sumCart } from './engines/cart-totals';
-import { calcDeliveryFees } from './engines/delivery';
-import { calcDineinCharge } from './engines/dinein';
-import { applyPromocode } from './engines/promocode';
-import { applyLoyalty } from './engines/loyalty';
-import { CheckoutConfig } from './models/CheckoutConfig';
+import { calculateCartTotals } from './engines/cart-totals';
+import { calculateItemPrices, mergePricedCartItems } from './engines/items';
+import { applySequentialDiscounts } from './engines/discount';
+import { calculateVatBreakdown } from './engines/vat';
+import { validateICheckoutConfig } from './validation/validation';
+import { calculatePromocodeValue } from './engines/promocode';
+import { calculateFinalTotal } from './engines/final-total';
+import { calculateSubTotalVat } from './engines/subTotalVat';
+import type { ICheckoutConfig } from './models/CheckoutConfig';
 
 export interface CheckoutResult {
-  items: PricedCartItem[];
-  offers: PricedOfferItem[];
-  totals: {
-    subTotalNet: number;
-    subTotalPrice: number;
-    deliveryFee: number;
-    deliveryFeeWithVat: number;
-    deliveryTime: number;
-    vat: number;
-    dineinCharge: number;
-    afterPromocode: number;
-    loyaltyCredit: number;
-    finalTotal: number;
-    pointsUsed: number;
-  };
+  subtotal: number;
+  subtotalWithVat: number;
+  totalVat: number;
+  promocodeDiscountAmount: number;
+  loyaltyDiscountAmount: number;
+  finalTotal: number;
+  subtotalVat: number;
 }
 
-export function checkout(config: CheckoutConfig): CheckoutResult {
-  const pricedItems = config.menuItems.map(calcItemPrices);
-  const pricedOffers = config.offers.map(calcOfferPrices);
 
-  const { totalNet, totalPrice } = sumCart([...pricedItems, ...pricedOffers]);
 
-  const { fee, feeWithVat, time } = calcDeliveryFees({
-    branchConfig: config.branchConfig,
-    addressConfig: config.addressConfig,
-    deliveryType: config.deliveryType,
-  });
+const to2 = (n: number) => Number(n.toFixed(2));
 
-  const vatBase = parseFloat(((totalPrice - totalNet + (feeWithVat - fee)) || 0).toFixed(2));
-  const dineinCharge = calcDineinCharge(totalNet, {
-    fixed: config.dineinFixed,
-    percentage: config.dineinPercentage,
-  });
-  const dineinVat = parseFloat((((totalNet + dineinCharge) * 0.14) - (totalNet * 0.14)).toFixed(2));
+export function checkout(config: ICheckoutConfig): CheckoutResult {
+  validateICheckoutConfig(config);
+  const {
+    cartMenuItems,
+    cartOffers,
+    deliveryFeesEgp = 0,
+    loyaltyBalance = 0,
+    dineinExtraCharge = 0,
+    coupon,
+    deliveryType,
+    appType
+  } = config;
 
-  let amount = totalPrice + feeWithVat + dineinCharge + dineinVat;
-  amount = applyPromocode(amount, {
-    fixed: config.promocodeFixed,
-    percentage: config.promocodePercentage,
-  });
+  const menuItemsTotal = cartMenuItems ? calculateItemPrices(cartMenuItems) : undefined;
+  const offersTotal = cartOffers ? calculateItemPrices(cartOffers) : undefined;
+  const allItemTotals = mergePricedCartItems(menuItemsTotal, offersTotal);
 
-  const { pointsUsed, creditValue } = applyLoyalty(amount, config.userPointsInfo || {});
-  const finalTotal = parseFloat((amount - creditValue).toFixed(2));
+  const { itemsNetPrice, itemsTotalPrice } = calculateCartTotals(allItemTotals);
+
+  const subtotalVat = calculateSubTotalVat(itemsTotalPrice, itemsNetPrice);
+
+  const isDeliveryFree = !!coupon?.data && coupon.data.discount_type === 'delivery_free';
+  const allowLoyalty = !(coupon?.data && !coupon.data.allow_loyalty);
+  let validLoyaltyDiscount = allowLoyalty ? loyaltyBalance : 0;
+  const effectiveDeliveryFeesEgp = isDeliveryFree ? 0 : deliveryFeesEgp;
+
+  const promocodeValueEgp = isDeliveryFree
+    ? 0
+    : calculatePromocodeValue(
+      coupon ?? null,
+      itemsNetPrice,
+      deliveryFeesEgp,
+      deliveryType,
+      appType ?? 10
+    );
+
+  const { appliedPromoCode, appliedLoyalty, itemsNetPriceAfterDiscount } = applySequentialDiscounts(itemsNetPrice, promocodeValueEgp, validLoyaltyDiscount);
+
+  const { totalVat } = calculateVatBreakdown({
+    itemsNetPriceAfterDiscount,
+    itemsTotalPrice,
+    dineinExtraCharge,
+    effectiveDeliveryFeesEgp,
+    appliedPromoCode,
+    appliedLoyalty,
+  }
+  );
+  const finalTotal = calculateFinalTotal({ totalVat, itemsNetPriceAfterDiscount, dineinExtraCharge, deliveryFeesEgp: effectiveDeliveryFeesEgp })
+  const promoShown = isDeliveryFree ? deliveryFeesEgp : appliedPromoCode;
 
   return {
-    items: pricedItems,
-    offers: pricedOffers,
-    totals: {
-      subTotalNet: totalNet,
-      subTotalPrice: totalPrice,
-      deliveryFee: fee,
-      deliveryFeeWithVat: feeWithVat,
-      deliveryTime: time,
-      vat: vatBase + dineinVat,
-      dineinCharge,
-      afterPromocode: amount,
-      loyaltyCredit: creditValue,
-      finalTotal,
-      pointsUsed,
-    }
+    subtotal: to2(itemsNetPrice),
+    subtotalWithVat: to2(itemsTotalPrice),
+    loyaltyDiscountAmount: to2(appliedLoyalty),
+    promocodeDiscountAmount: to2(promoShown),
+    subtotalVat: to2(subtotalVat),
+    totalVat: to2(totalVat),
+    finalTotal: to2(finalTotal),
   };
 }
+
 
 // Re-export all types and functions for convenience
 export * from './models/CartItem';
-export * from './models/OfferItem';
-export * from './models/CheckoutConfig';
+export * from './models/CartTotals';
 export * from './engines/items';
-export * from './engines/offers';
 export * from './engines/cart-totals';
-export * from './engines/delivery';
-export * from './engines/dinein';
+export * from './engines/discount';
+export * from './engines/vat';
 export * from './engines/promocode';
-export * from './engines/loyalty'; 
+export * from './validation/validation';
